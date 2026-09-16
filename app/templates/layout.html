@@ -115,6 +115,7 @@
                     <input type="text" name="q" class="form-control" placeholder="Buscar na Wiki...">
                     <button class="btn btn-success" type="submit"><i class="bi bi-search"></i></button>
                 </div>
+            </form>
             <!-- Ferramentas Rápidas Mobile -->
             <div class="list-group list-group-flush mb-3 border-bottom pb-2">
                 <a href="/calculadora" class="list-group-item list-group-item-action d-flex align-items-center gap-2 border-0 rounded py-2">
@@ -236,7 +237,7 @@
 
         <!-- Caixa de Entrada da Gaveta -->
         <div class="p-2.5 border-top bg-body">
-            <form id="drawerChatForm" onsubmit="handleDrawerChatSubmit(event)">
+            <form id="drawerChatForm" action="javascript:void(0);" onsubmit="event.preventDefault(); handleDrawerChatSubmit(event); return false;">
                 <div class="input-group">
                     <label class="input-group-text bg-light text-muted border-end-0 cursor-pointer" for="drawerImageInput" title="Anexar foto para diagnóstico com Gemini Vision">
                         <i class="bi bi-camera fs-6"></i>
@@ -267,7 +268,7 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/app.js?v=20260916_03"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
