@@ -400,14 +400,6 @@ function finalizeBotMessage(msgId, markdownText, sources) {
     }
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
-        </div>
-        <div class="avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
-            <i class="bi bi-person"></i>
-        </div>
-    `;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
 
 function appendLoadingMessage() {
     const id = "loading-" + Date.now();

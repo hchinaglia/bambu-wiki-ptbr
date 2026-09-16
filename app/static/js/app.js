@@ -395,7 +395,8 @@ async function handleDrawerChatSubmit(e) {
     messages.scrollTop = messages.scrollHeight;
 
     let fullText = "";
-    let sourc    const userApiKey = localStorage.getItem("bambu_gemini_api_key") || "";
+    let sources = [];
+    const userApiKey = localStorage.getItem("bambu_gemini_api_key") || "";
 
     try {
         const response = await fetch("/api/chat/stream", {
