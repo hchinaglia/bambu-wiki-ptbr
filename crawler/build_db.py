@@ -11,27 +11,45 @@ import threading
 from typing import Any, Dict, List, Optional
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_FILE = os.path.join(BASE_DIR, "wiki_bambu.db")
-if not os.path.exists(DB_FILE) and os.path.exists("wiki_bambu.db"):
-    DB_FILE = os.path.abspath("wiki_bambu.db")
 
+
+def resolve_db_path(db_path: Optional[str] = None) -> str:
+    """Procura pelo arquivo do banco em múltiplos diretórios candidatos."""
+    if db_path and os.path.exists(db_path) and os.path.getsize(db_path) > 1024 * 1024:
+        return os.path.abspath(db_path)
+
+    candidates = [
+        os.path.join(BASE_DIR, "wiki_bambu.db"),
+        os.path.join(os.getcwd(), "wiki_bambu.db"),
+        os.path.abspath("wiki_bambu.db"),
+        "/var/task/wiki_bambu.db",
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "wiki_bambu.db"),
+    ]
+    for c in candidates:
+        if os.path.exists(c) and os.path.getsize(c) > 1024 * 1024:
+            return os.path.abspath(c)
+    return os.path.join(BASE_DIR, "wiki_bambu.db")
+
+
+DB_FILE = resolve_db_path()
 DB_LOCK = threading.Lock()
 
 
-def get_connection(db_path: str = DB_FILE) -> sqlite3.Connection:
+def get_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
     """Retorna uma conexão com SQLite tolerante a ambientes locais e serverless (Vercel)."""
+    actual_path = resolve_db_path(db_path)
     try:
-        conn = sqlite3.connect(db_path, timeout=60.0)
+        conn = sqlite3.connect(actual_path, timeout=60.0)
         conn.row_factory = sqlite3.Row
         try:
             conn.execute("PRAGMA journal_mode=WAL;")
             conn.execute("PRAGMA busy_timeout=60000;")
-        except sqlite3.OperationalError:
+        except Exception:
             pass
         return conn
-    except sqlite3.OperationalError:
+    except Exception:
         # Fallback para modo estritamente leitura (read-only) em lambdas
-        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True, timeout=60.0)
+        conn = sqlite3.connect(f"file:{actual_path}?mode=ro", uri=True, timeout=60.0)
         conn.row_factory = sqlite3.Row
         return conn
 

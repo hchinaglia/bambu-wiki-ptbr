@@ -29,21 +29,45 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Inicializa banco de dados se necessário
-init_db(DB_FILE)
+# Inicializa banco de dados apenas se não estiver no Vercel (onde o FS é read-only)
+if os.environ.get("VERCEL") != "1":
+    try:
+        init_db(DB_FILE)
+    except Exception:
+        pass
 
 # Configura arquivos estáticos e templates
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-os.makedirs(STATIC_DIR, exist_ok=True)
-os.makedirs(os.path.join(STATIC_DIR, "css"), exist_ok=True)
-os.makedirs(os.path.join(STATIC_DIR, "js"), exist_ok=True)
-os.makedirs(TEMPLATES_DIR, exist_ok=True)
+try:
+    os.makedirs(STATIC_DIR, exist_ok=True)
+    os.makedirs(os.path.join(STATIC_DIR, "css"), exist_ok=True)
+    os.makedirs(os.path.join(STATIC_DIR, "js"), exist_ok=True)
+    os.makedirs(TEMPLATES_DIR, exist_ok=True)
+except Exception:
+    pass
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": str(exc),
+            "type": exc.__class__.__name__,
+            "traceback": traceback.format_exc(),
+            "db_file": str(DB_FILE),
+            "db_exists": os.path.exists(DB_FILE) if DB_FILE else False,
+        }
+    )
 
 # Mapeamento e taxonomia de seções com nomes em português e ícones
 SECTION_CONFIG = {

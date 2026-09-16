@@ -5,7 +5,7 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
-        "includeFiles": "wiki_bambu.db,app/**"
+        "includeFiles": "wiki_bambu.db,app/**,crawler/**"
       }
     }
   ],
