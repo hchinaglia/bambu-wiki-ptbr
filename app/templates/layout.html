@@ -48,30 +48,85 @@
             </div>
 
             <!-- Navegação Superior & Ações -->
-            <div class="d-flex align-items-center gap-3">
-                <a href="/" class="nav-link d-none d-lg-block">Início</a>
-                <a href="/wiki/x1" class="nav-link d-none d-lg-block">Série X</a>
-                <a href="/wiki/p1" class="nav-link d-none d-lg-block">Série P</a>
-                <a href="/wiki/a1" class="nav-link d-none d-lg-block">Série A</a>
-                <a href="/wiki/ams" class="nav-link d-none d-lg-block">AMS</a>
-                <a href="/calculadora" class="nav-link d-none d-xl-block" title="Calculadora de Slicing Bambu Studio">
-                    <i class="bi bi-sliders text-info me-1"></i> Calculadora
+            <div class="d-flex align-items-center gap-2 gap-xl-2.5">
+                <!-- Dropdown Modelos / Séries -->
+                <div class="dropdown d-none d-lg-block">
+                    <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-printer text-muted"></i> Modelos
+                    </a>
+                    <ul class="dropdown-menu shadow-sm">
+                        <li>
+                            <a class="dropdown-item" href="/wiki/x1">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">X1</span> Série X (X1 / X1-Carbon)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/wiki/p1">
+                                <span class="badge bg-info-subtle text-info border border-info-subtle me-1">P1</span> Série P (P1S / P1P)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/wiki/a1">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle me-1">A1</span> Série A (A1 / A1 Mini / A2L)
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item" href="/wiki/ams">
+                                <i class="bi bi-palette2 text-warning me-1"></i> Sistema AMS & AMS Lite
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Calculadora de Slicing Bambu Studio -->
+                <a href="/calculadora" class="nav-link d-none d-lg-inline-flex" title="Calculadora de Slicing Bambu Studio">
+                    <i class="bi bi-sliders text-info"></i> Calculadora
                 </a>
-                <a href="/hms" class="nav-link d-none d-xl-block" title="Decodificador de Erros HMS">
-                    <i class="bi bi-upc-scan text-danger me-1"></i> HMS
+
+                <!-- Detector de Cores & Preços -->
+                <a href="/cores" class="nav-link d-none d-lg-inline-flex" title="Detector de Cores & Comparador de Filamentos">
+                    <i class="bi bi-palette-fill text-warning"></i> Cores & Preços
                 </a>
-                <a href="/filamentos" class="nav-link d-none d-xl-block" title="Tabela de Filamentos">
-                    <i class="bi bi-layers text-success me-1"></i> Filamentos
+
+                <!-- Links diretos em telas ultra-largas (xxl >= 1400px) -->
+                <a href="/filamentos" class="nav-link d-none d-xxl-inline-flex" title="Tabela de Filamentos">
+                    <i class="bi bi-layers text-success"></i> Filamentos
                 </a>
-                <a href="/cores" class="nav-link d-none d-xl-block" title="Detector de Cores & Comparador de Filamentos">
-                    <i class="bi bi-palette-fill text-warning me-1"></i> Cores & Preços
+                <a href="/hms" class="nav-link d-none d-xxl-inline-flex" title="Decodificador de Erros HMS">
+                    <i class="bi bi-upc-scan text-danger"></i> HMS
                 </a>
+
+                <!-- Dropdown "Mais" em telas normais (d-lg-block d-xxl-none) -->
+                <div class="dropdown d-none d-lg-block d-xxl-none">
+                    <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Mais
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li>
+                            <a class="dropdown-item" href="/hms">
+                                <i class="bi bi-upc-scan text-danger me-1"></i> Decodificador HMS
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/filamentos">
+                                <i class="bi bi-layers text-success me-1"></i> Tabela de Filamentos
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item" href="https://wiki.bambulab.com/" target="_blank" rel="noopener">
+                                <i class="bi bi-box-arrow-up-right text-muted me-1"></i> Wiki Oficial Bambu Lab
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
                 <!-- Dropdown de Favoritos -->
                 <div class="dropdown d-none d-md-block">
                     <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" id="bookmarksDropdownBtn" title="Manuais Salvos">
                         <i class="bi bi-star-fill text-warning"></i>
-                        <span class="d-none d-lg-inline small">Favoritos</span>
+                        <span class="d-none d-xl-inline small">Favoritos</span>
                         <span class="badge bg-secondary-subtle text-secondary rounded-pill small" id="bookmarksBadge">0</span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end shadow-lg p-2" id="bookmarksMenu" style="width: 320px; max-height: 380px; overflow-y: auto;">
@@ -85,15 +140,18 @@
                     <i class="bi bi-robot"></i> <span class="d-none d-sm-inline">Assistente IA</span>
                 </button>
 
+                <!-- Alternar Tema -->
                 <button class="btn btn-sm btn-outline-secondary theme-toggle-btn" id="themeToggle" title="Alternar tema claro/escuro">
                     <i class="bi bi-moon-stars" id="themeIcon"></i>
                 </button>
 
-                <a href="https://wiki.bambulab.com/" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success d-none d-sm-inline-flex align-items-center gap-1">
+                <!-- Wiki Oficial em telas ultra-largas (xxl) -->
+                <a href="https://wiki.bambulab.com/" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success d-none d-xxl-inline-flex align-items-center gap-1">
                     <i class="bi bi-box-arrow-up-right"></i> Wiki Oficial
                 </a>
 
-                <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                <!-- Botão Menu Mobile (aparece em telas < 992px) -->
+                <button class="btn btn-sm btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" title="Menu de Navegação">
                     <i class="bi bi-list fs-5"></i>
                 </button>
             </div>
