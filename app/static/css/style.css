@@ -65,7 +65,8 @@ body {
 /* Search Box */
 .search-container {
     width: 100%;
-    max-width: 480px;
+    min-width: 220px;
+    max-width: 400px;
 }
 
 .search-form .input-group {
