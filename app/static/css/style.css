@@ -65,9 +65,15 @@ body {
 /* Search Box */
 .search-container {
     width: 100%;
-    min-width: 160px;
-    max-width: 280px;
+    min-width: 140px;
+    max-width: 220px;
     flex-shrink: 1;
+}
+
+@media (min-width: 1200px) {
+    .search-container {
+        max-width: 280px;
+    }
 }
 
 /* Custom Navbar Links & Anti-Wrap Protection */
@@ -80,7 +86,6 @@ body {
 
 .custom-navbar .nav-link {
     white-space: nowrap !important;
-    display: inline-flex !important;
     align-items: center;
     gap: 0.35rem;
     font-size: 0.86rem;

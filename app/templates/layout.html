@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <!-- Custom Style -->
-    <link rel="stylesheet" href="/static/css/style.css?v=20260916_04">
+    <link rel="stylesheet" href="/static/css/style.css?v=20260916_05">
     <!-- Marked.js para renderização de Markdown no cliente -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     {% block head %}{% endblock %}
@@ -31,13 +31,13 @@
             </a>
 
             <!-- Barra de Busca Global -->
-            <div class="search-container mx-auto position-relative d-none d-md-block">
+            <div class="search-container me-auto ms-2 ms-xl-3 position-relative d-none d-md-block">
                 <form action="/search" method="GET" class="search-form">
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-end-0 text-muted">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text" id="globalSearchInput" name="q" class="form-control border-start-0 ps-0" placeholder="Buscar guias, erros, manutenção, modelos... (Ctrl+K)" autocomplete="off">
+                        <input type="text" id="globalSearchInput" name="q" class="form-control border-start-0 ps-0" placeholder="Buscar na Wiki... (Ctrl+K)" autocomplete="off">
                         <span class="input-group-text bg-transparent text-muted kbd-shortcut">
                             <kbd>/</kbd>
                         </span>
