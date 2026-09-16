@@ -59,6 +59,16 @@ PRINTERS_CONFIG = {
         "max_hotend_temp": 300,
         "max_bed_temp": 80,
     },
+    "a2l": {
+        "name": "Bambu Lab A2L (Grande Formato)",
+        "type": "Bed Slinger Aberta (330×320×325 mm)",
+        "has_enclosure": False,
+        "has_aux_fan": False,
+        "has_chamber_temp": False,
+        "default_nozzle_material": "Aço Inoxidável (Quick Swap)",
+        "max_hotend_temp": 300,
+        "max_bed_temp": 80,
+    },
 }
 
 # Definição dos Materiais e suas características térmicas e físicas
@@ -451,7 +461,9 @@ def calculate_slicing_profile(
         temp_nozzle_other += 5
 
     # Temperatura da mesa com base na chapa
-    bed_temp = filament["bed_temps"].get(plate_id, 55)
+    recommended_bed = filament["bed_temps"].get(plate_id, 55)
+    max_bed = printer.get("max_bed_temp", 120)
+    bed_temp = min(recommended_bed, max_bed)
 
     # 6. Resfriamento (Cooling)
     cooling = dict(filament["cooling"])
@@ -557,6 +569,22 @@ def calculate_slicing_profile(
             "level": "success",
             "title": "Dica de Furo & Encaixe (Bambu Studio)",
             "message": "Se parafusos ou rolamentos ficarem muito justos, ative no Bambu Studio: Aba 'Quality' -> 'Precision' -> 'X-Y Hole Compensation' = +0.05mm a +0.10mm."
+        })
+
+    # Alerta de limite térmico de mesa
+    if recommended_bed > max_bed:
+        expert_alerts.append({
+            "level": "warning",
+            "title": f"Limite Térmico de Mesa ({printer['name']})",
+            "message": f"O filamento sugere {recommended_bed} °C na mesa, porém a mesa da {printer['name']} opera até no máximo {max_bed} °C. O perfil foi ajustado para {bed_temp} °C."
+        })
+
+    # Alerta específico para A2L com TPU
+    if printer_id == "a2l" and is_tpu:
+        expert_alerts.append({
+            "level": "info",
+            "title": "A2L: Suporte a TPU & AMS HT",
+            "message": "A Bambu Lab A2L possui compatibilidade oficial com TPU 90A / 95A através do novo módulo AMS HT com alimentação de baixa fricção ou suporte externo. Mantenha o filamento seco (< 20% umidade)."
         })
 
     return {
