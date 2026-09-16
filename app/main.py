@@ -22,6 +22,13 @@ from app.agent import ask_agent, stream_agent_response
 from app.config import SUPPORTED_MODELS
 from app.hms_data import HMS_DATABASE, search_hms_codes
 from app.filament_data import FILAMENT_DATABASE, get_filaments
+from app.filament_colors import (
+    BAMBU_OFFICIAL_COLORS,
+    NATIONAL_BRANDS_COLORS,
+    PROMO_COUPONS,
+    match_color_to_filaments,
+    infer_material_recommendation,
+)
 from app.studio_calculator import calculate_slicing_profile
 
 app = FastAPI(
@@ -348,6 +355,97 @@ async def api_calculator(
         support_type=support_type,
     )
     return JSONResponse(profile)
+
+
+@app.get("/cores", response_class=HTMLResponse)
+async def color_matcher_page(request: Request):
+    """Página do Detector de Cores & Comparador de Filamentos com IA."""
+    return templates.TemplateResponse(
+        request=request,
+        name="color_matcher.html",
+        context={
+            "request": request,
+            "nav_tree": get_navigation_tree(),
+            "active_path": "cores",
+            "bambu_colors": BAMBU_OFFICIAL_COLORS,
+            "national_colors": NATIONAL_BRANDS_COLORS,
+            "coupons": PROMO_COUPONS,
+        }
+    )
+
+
+@app.post("/api/cores/analisar")
+async def api_analyze_colors(request: Request):
+    """Endpoint para analisar cores e imagem, recomendar material e comparar filamentos."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Formato JSON inválido")
+
+    colors = body.get("colors", [])
+    context_hint = body.get("description", "")
+    preferred_material = body.get("material")
+    image_b64 = body.get("image_b64")
+    mime_type = body.get("mime_type", "image/png")
+    api_key = (request.headers.get("x-gemini-key") or body.get("api_key") or "").strip()
+
+    # Se não houver material explicitamente escolhido, infere automaticamente
+    if not preferred_material or preferred_material == "auto":
+        mat_info = infer_material_recommendation(context_hint)
+        detected_material = mat_info["material"]
+    else:
+        mat_info = infer_material_recommendation(preferred_material)
+        detected_material = preferred_material
+
+    # Análise com Gemini Vision se houver imagem e chave
+    ai_feedback = None
+    if image_b64 and (api_key or os.environ.get("GEMINI_API_KEY")):
+        try:
+            vision_prompt = (
+                "Você é o Engenheiro Especialista da Wiki Bambu Lab. Analise a imagem/render desta peça 3D:\n"
+                "1. Descreva o que é a peça e qual a aplicação recomendada (miniatura decorativa, peça mecânica, utilitário, etc.).\n"
+                "2. Confirme o material recomendado (PLA, PETG, TPU ou ASA/ABS) justificando tecnicamente.\n"
+                "3. Para impressão no sistema AMS (Multi-Material da Bambu Lab), aponte as principais cores e recomende qual cor deve ir em cada um dos Slots (Slot 1 a Slot 4).\n"
+                "4. Dê 2 dicas práticas de fatiamento no Bambu Studio para este modelo (ex: orientação de impressão, suporte em árvore, gerador de paredes Arachne)."
+            )
+            ai_res = ask_agent(
+                question=vision_prompt,
+                image_b64=image_b64,
+                mime_type=mime_type,
+                api_key=api_key
+            )
+            if ai_res.get("status") == "success":
+                ai_feedback = ai_res.get("answer")
+        except Exception as e:
+            print(f"Aviso na análise com IA Vision: {e}", flush=True)
+
+    # Executa correspondência de cada cor
+    matched_results = []
+    for hex_c in colors[:8]:
+        match_data = match_color_to_filaments(hex_c, preferred_material=detected_material)
+        matched_results.append(match_data)
+
+    # Monta sugestão de distribuição nos 4 slots do AMS
+    ams_slots = []
+    slot_letters = ["Slot 1 (Principal)", "Slot 2 (Secundário)", "Slot 3 (Detalhes)", "Slot 4 (Destaque)"]
+    for i, m in enumerate(matched_results[:4]):
+        ams_slots.append({
+            "slot": slot_letters[i],
+            "target_hex": m["target_hex"],
+            "bambu_color": m["bambu_match"]["name"],
+            "bambu_hex": m["bambu_match"]["hex"],
+            "national_color": m["national_match"]["name"] if m.get("national_match") else "N/A",
+            "national_brand": m["national_match"]["brand"] if m.get("national_match") else "",
+            "material": detected_material
+        })
+
+    return JSONResponse({
+        "material_recommendation": mat_info,
+        "matched_colors": matched_results,
+        "ams_slots": ams_slots,
+        "coupons": PROMO_COUPONS,
+        "ai_feedback": ai_feedback
+    })
 
 
 @app.get("/api/search")

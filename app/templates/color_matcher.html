@@ -1,0 +1,772 @@
+{% extends "layout.html" %}
+
+{% block title %}Detector de Cores & Comparador de Filamentos - Wiki Bambu Lab Brasil{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-0 px-md-3 py-2">
+    
+    <!-- Hero Header -->
+    <div class="card border rounded-4 shadow-sm bg-body mb-4 overflow-hidden">
+        <div class="card-body p-4 p-md-5">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-1.5 rounded-pill fw-semibold">
+                            <i class="bi bi-palette-fill me-1"></i> Detector de Cores & Filamentos
+                        </span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill small">
+                            <i class="bi bi-cpu me-1"></i> IA Vision + AMS Ready
+                        </span>
+                    </div>
+                    <h1 class="display-6 fw-bold mb-2 text-body">
+                        Descubra o Filamento Certo para Sua Imagem ou Render 3D
+                    </h1>
+                    <p class="text-muted lead fs-6 mb-0">
+                        Suba uma foto, desenho ou render 3D: a Inteligência Artificial analisa as cores, recomenda o material correto (PLA, PETG, TPU ou ASA), mapeia os slots do <strong>Bambu Lab AMS</strong> e busca os <strong>melhores preços e cupons de desconto</strong> no Brasil.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <div class="d-inline-flex flex-column gap-2 p-3 bg-body-tertiary rounded-4 border text-start">
+                        <div class="d-flex align-items-center gap-2 small text-muted">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span>Cores Oficiais Bambu Lab & Nacionais</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 small text-muted">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span>Comparador Mercado Livre, Shopee & Amazon</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 small text-muted">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span>Distribuição automática de Slots no AMS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exemplos Rápidos para Testar -->
+            <div class="mt-4 pt-3 border-top">
+                <span class="small fw-bold text-secondary text-uppercase d-block mb-2">
+                    <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Teste com Amostras Rápidas:
+                </span>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill sample-btn" data-type="figurine" data-colors="#FFD100,#D8232A,#1A1A1A,#FFFFFF" data-name="Pikachu Multicolor (Miniatura)">
+                        ⚡ Pikachu (Amarelo / Vermelho / Preto)
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill sample-btn" data-type="figurine" data-colors="#D8232A,#00629B,#FFFFFF,#5C4033" data-name="Mario Bros (Estátua Colecionável)">
+                        🍄 Mario Bros (Vermelho / Azul / Branco)
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill sample-btn" data-type="mechanical" data-colors="#1A1A1A,#A2AAAD,#00AE42" data-name="Suporte de Câmera e Engrenagem">
+                        ⚙️ Peça Mecânica (Preto / Prata / Verde)
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill sample-btn" data-type="flexible" data-colors="#111111,#0070BA" data-name="Gaxeta e Capinha Flexível">
+                        🤸 Capinha Flexível (TPU Preto / Azul)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Principal: Upload & Canvas à Esquerda | Resultados à Direita -->
+    <div class="row g-4">
+        
+        <!-- Coluna Esquerda: Upload e Imagem Interativa -->
+        <div class="col-lg-5">
+            <div class="card border rounded-4 shadow-sm bg-body sticky-lg-top" style="top: 85px; z-index: 10;">
+                <div class="card-header bg-body border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold h6 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-cloud-arrow-up text-success fs-5"></i>
+                        <span>Upload da Imagem ou Render 3D</span>
+                    </span>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5" id="clearBtn" style="font-size: 0.75rem;">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar
+                    </button>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <!-- Dropzone -->
+                    <div id="dropZone" class="border-2 border-dashed rounded-4 p-4 text-center cursor-pointer transition-all bg-body-tertiary mb-3 position-relative" style="min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-style: dashed; border-color: var(--border-color);">
+                        <input type="file" id="fileInput" class="position-absolute w-100 h-100 top-0 start-0 opacity-0 cursor-pointer" accept="image/png, image/jpeg, image/webp, .stl, .3mf">
+                        <div id="dropZonePrompt">
+                            <div class="rounded-circle bg-success-subtle text-success p-3 d-inline-flex mb-3">
+                                <i class="bi bi-image fs-2"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">Arraste sua imagem ou clique aqui</h6>
+                            <p class="text-muted small mb-2">Suporta PNG, JPG, WEBP, fotos ou renders de modelos 3D (.3MF / .STL)</p>
+                            <span class="badge bg-body border text-secondary px-2.5 py-1 rounded-pill small">
+                                <i class="bi bi-clipboard me-1"></i> Dica: Você também pode colar com Ctrl + V
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas e Visualizador de Imagem -->
+                    <div id="previewContainer" class="d-none mb-3">
+                        <div class="position-relative border rounded-3 overflow-hidden bg-black text-center" style="max-height: 380px;">
+                            <canvas id="imageCanvas" class="img-fluid" style="max-height: 360px; cursor: crosshair;"></canvas>
+                            <!-- Lupa flutuante do conta-gotas -->
+                            <div id="colorLoupe" class="position-absolute d-none rounded-circle border border-2 border-white shadow-lg pointer-events-none" style="width: 48px; height: 48px; transform: translate(-50%, -50%); z-index: 20; pointer-events: none;"></div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mt-2 px-1">
+                            <small class="text-muted">
+                                <i class="bi bi-eyedropper text-success me-1"></i> Clique em qualquer ponto da imagem para inspecionar a cor.
+                            </small>
+                            <button class="btn btn-xs btn-outline-secondary rounded-pill py-1 px-2.5 small" id="nativeEyeDropperBtn" style="font-size: 0.75rem;">
+                                <i class="bi bi-pipette me-1"></i> Conta-Gotas da Tela
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Paleta de Cores Extraídas -->
+                    <div class="border rounded-3 p-3 bg-body-tertiary mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-bold text-secondary text-uppercase">
+                                <i class="bi bi-palette me-1"></i> Cores Identificadas no Modelo:
+                            </span>
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill small" id="paletteCountBadge">0 cores</span>
+                        </div>
+                        <div id="paletteSwatches" class="d-flex flex-wrap gap-2 min-h-36 align-items-center">
+                            <span class="text-muted small fst-italic">Envie uma imagem para extrair a paleta automaticamente.</span>
+                        </div>
+                    </div>
+
+                    <!-- Opções Opcionais de Aplicação -->
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-secondary mb-1.5 d-flex align-items-center gap-1.5" for="materialSelect">
+                            <i class="bi bi-layers text-primary"></i>
+                            <span>Tipo de Aplicação da Peça (Opcional):</span>
+                        </label>
+                        <select class="form-select border rounded-3 py-2 px-3 small" id="materialSelect" style="font-size: 0.88rem;">
+                            <option value="auto" selected>✨ Automático (IA decide se é PLA, PETG ou TPU)</option>
+                            <option value="PLA">PLA (Decorativo, Action Figures, Maquetes, Brinquedos)</option>
+                            <option value="PETG">PETG (Peças Mecânicas, Suportes, Uso Externo, Utilitários)</option>
+                            <option value="TPU">TPU 95A (Gaxetas, Capinhas, Amortecedores, Peças Flexíveis)</option>
+                            <option value="ASA">ASA / ABS (Automotivo, Alta Temperatura, Resistente UV)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary mb-1.5 d-flex align-items-center gap-1.5" for="itemDescriptionInput">
+                            <i class="bi bi-chat-left-text text-secondary"></i>
+                            <span>Descrição do Modelo (Ajuda a IA no diagnóstico):</span>
+                        </label>
+                        <input type="text" class="form-control border rounded-3 py-2 px-3 small" id="itemDescriptionInput" placeholder="Ex: Miniatura colecionável para mesa de escritório" style="font-size: 0.88rem;">
+                    </div>
+
+                    <button class="btn btn-success w-100 py-2.5 rounded-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" id="analyzeBtn">
+                        <i class="bi bi-search"></i>
+                        <span>Analisar Cores & Buscar Melhores Preços</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Recomendações de Material, AMS e Comparação de Preços -->
+        <div class="col-lg-7">
+            
+            <!-- Estado Inicial / Placeholder de Boas-Vindas -->
+            <div id="resultsPlaceholder" class="card border rounded-4 shadow-sm bg-body p-5 text-center">
+                <div class="rounded-circle bg-success-subtle text-success p-3 d-inline-flex mx-auto mb-3" style="width: 64px; height: 64px; align-items: center; justify-content: center;">
+                    <i class="bi bi-magic fs-2"></i>
+                </div>
+                <h4 class="fw-bold mb-2">Aguardando Imagem ou Cores</h4>
+                <p class="text-muted mx-auto mb-4" style="max-width: 480px;">
+                    Faça upload da foto da sua peça ou clique em uma das <strong>Amostras Rápidas</strong> acima para ver a IA recomendar os filamentos ideais, a ordem no AMS e os melhores preços disponíveis.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-outline-success rounded-pill px-4" onclick="document.querySelector('.sample-btn').click();">
+                        <i class="bi bi-play-fill me-1"></i> Carregar Exemplo do Pikachu
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bloco de Resultados Dinâmicos (Preenchido via JavaScript) -->
+            <div id="resultsContent" class="d-none">
+
+                <!-- Card 1: Diagnóstico de Material Recomendado (PLA vs PETG vs TPU) -->
+                <div class="card border rounded-4 shadow-sm mb-4 bg-body overflow-hidden" id="materialCard">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-3 bg-success-subtle text-success p-2">
+                                <i class="bi bi-check2-circle fs-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="h6 fw-bold mb-0">1. Material Recomendado para Este Modelo</h3>
+                                <span class="text-muted small">Análise técnica de resistência mecânica e propriedades térmicas.</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-success rounded-pill px-3 py-1.5" id="matBadge">PLA</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-column gap-2.5">
+                            <div class="h5 fw-bold text-body mb-1" id="matTitle">Bambu PLA Basic / PLA Matte</div>
+                            <p class="text-muted mb-2 small" id="matReason">
+                                Ideal para modelos decorativos com máxima fidelidade e zero empenamento.
+                            </p>
+                            <div class="p-3 border rounded-3 bg-body-tertiary small" id="matAmsAlert">
+                                <i class="bi bi-check-circle-fill text-success me-1"></i> 100% Compatível com o sistema AMS.
+                            </div>
+                            <div class="small text-secondary">
+                                <i class="bi bi-sliders text-info me-1"></i>
+                                <strong>Preset Bambu Studio:</strong> <span id="matPreset">0.20mm Standard</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Distribuição de Slots no Sistema AMS (Slots 1 a 4) -->
+                <div class="card border rounded-4 shadow-sm mb-4 bg-body overflow-hidden">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-3 bg-primary-subtle text-primary p-2">
+                                <i class="bi bi-boxes fs-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="h6 fw-bold mb-0">2. Mapeamento Sugerido no Bambu Lab AMS</h3>
+                                <span class="text-muted small">Configuração ideal das bobinas nos 4 slots para troca multicolor automática.</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5">AMS 4 Cores</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3" id="amsSlotsContainer">
+                            <!-- Inserido dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Análise Detalhada com IA Vision (Se Ativa) -->
+                <div class="card border rounded-4 shadow-sm mb-4 bg-body overflow-hidden d-none" id="aiVisionCard">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-3 bg-warning-subtle text-warning p-2">
+                                <i class="bi bi-robot fs-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="h6 fw-bold mb-0">Parecer Técnico da IA Gemini Vision</h3>
+                                <span class="text-muted small">Análise visual e conselhos de fatiamento do especialista.</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-1.5">Gemini Vision</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="small text-body lh-base" id="aiVisionText" style="white-space: pre-line;"></div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Filamentos Correspondentes & Melhores Preços -->
+                <div class="card border rounded-4 shadow-sm mb-4 bg-body overflow-hidden">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-3 bg-danger-subtle text-danger p-2">
+                                <i class="bi bi-tags-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="h6 fw-bold mb-0">3. Filamentos Correspondentes & Busca de Melhores Preços</h3>
+                                <span class="text-muted small">Compare valores no Mercado Livre, Shopee, Amazon Brasil e Google Shopping.</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1.5">Onde Comprar</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-column gap-3" id="filamentMatchesContainer">
+                            <!-- Inserido dinamicamente via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Cupons de Desconto & Dicas de Economia -->
+                <div class="card border rounded-4 shadow-sm mb-4 bg-body overflow-hidden">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-3 bg-success-subtle text-success p-2">
+                                <i class="bi bi-percent fs-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="h6 fw-bold mb-0">4. Cupons de Desconto Ativos & Dicas de Economia</h3>
+                                <span class="text-muted small">Aproveite códigos promocionais e frete grátis para compras de filamento.</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5">Descontos</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3" id="couponsContainer">
+                            {% for c in coupons %}
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 bg-body-tertiary h-100 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                            <strong class="text-body">{{ c.store }}</strong>
+                                            <span class="badge bg-success text-white small">{{ c.discount }}</span>
+                                        </div>
+                                        <p class="small text-muted mb-2">{{ c.description }}</p>
+                                        <div class="small text-secondary fst-italic mb-2">
+                                            <i class="bi bi-info-circle text-primary me-1"></i> {{ c.tip }}
+                                        </div>
+                                    </div>
+                                    <div class="input-group input-group-sm mt-2">
+                                        <input type="text" class="form-control font-monospace text-uppercase fw-bold text-success bg-body" value="{{ c.code }}" readonly>
+                                        <button class="btn btn-outline-success copy-coupon-btn" data-code="{{ c.code }}" type="button" title="Copiar Cupom">
+                                            <i class="bi bi-copy me-1"></i> Copiar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Toast de Cópia de Cupom -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="couponToast" class="toast align-items-center text-bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill fs-5"></i>
+                <div>
+                    <strong>Código Copiado!</strong><br>
+                    <small>Cole na tela de pagamento da loja para ativar seu desconto.</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts de Processamento de Imagem & Paleta -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const previewContainer = document.getElementById('previewContainer');
+    const imageCanvas = document.getElementById('imageCanvas');
+    const ctx = imageCanvas.getContext('2d');
+    const paletteSwatches = document.getElementById('paletteSwatches');
+    const paletteCountBadge = document.getElementById('paletteCountBadge');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const materialSelect = document.getElementById('materialSelect');
+    const itemDescriptionInput = document.getElementById('itemDescriptionInput');
+    const colorLoupe = document.getElementById('colorLoupe');
+    const nativeEyeDropperBtn = document.getElementById('nativeEyeDropperBtn');
+
+    let currentColors = [];
+    let currentImageBase64 = null;
+    let currentMimeType = "image/png";
+
+    // 1. Eventos de Drag & Drop
+    ['dragenter', 'dragover'].forEach(name => {
+        dropZone.addEventListener(name, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-success', 'bg-success-subtle');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(name => {
+        dropZone.addEventListener(name, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-success', 'bg-success-subtle');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            handleFile(this.files[0]);
+        }
+    });
+
+    // Suporte a colar com Ctrl + V
+    window.addEventListener('paste', (e) => {
+        if (e.clipboardData && e.clipboardData.files.length > 0) {
+            handleFile(e.clipboardData.files[0]);
+        }
+    });
+
+    // 2. Manipulação de Arquivo e Carregamento na Tela
+    function handleFile(file) {
+        if (!file) return;
+
+        if (file.name.endsWith('.stl') || file.name.endsWith('.3mf')) {
+            itemDescriptionInput.value = `Modelo 3D (${file.name})`;
+            alert(`Arquivo 3D detectado: ${file.name}. Como arquivos 3D puros contêm geometria, para melhor resultado de cores você também pode subir um render ou screenshot do modelo pintado.`);
+        }
+
+        currentMimeType = file.type || "image/png";
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const img = new Image();
+            img.onload = function() {
+                // Desenha imagem no canvas
+                const maxDim = 800;
+                let w = img.width;
+                let h = img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+                imageCanvas.width = w;
+                imageCanvas.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+
+                previewContainer.classList.remove('d-none');
+                currentImageBase64 = imageCanvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+                currentMimeType = "image/jpeg";
+
+                // Extrai cores automaticamente da imagem
+                extractDominantColors(ctx, w, h);
+            };
+            img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 3. Algoritmo de Extração de Cores Dominantes (Canvas Pixel Clustering)
+    function extractDominantColors(context, width, height) {
+        const imgData = context.getImageData(0, 0, width, height).data;
+        const colorBuckets = {};
+        const step = 4 * 12; // amostra 1 pixel a cada 12 para velocidade
+
+        for (let i = 0; i < imgData.length; i += step) {
+            const r = imgData[i];
+            const g = imgData[i + 1];
+            const b = imgData[i + 2];
+            const a = imgData[i + 3];
+
+            // Ignora pixels transparentes ou completamente brancos/pretos de fundo puro
+            if (a < 128) continue;
+
+            // Quantização simples em faixas de 32 para agrupar tons similares
+            const qr = Math.round(r / 32) * 32;
+            const qg = Math.round(g / 32) * 32;
+            const qb = Math.round(b / 32) * 32;
+            const key = `${Math.min(255, qr)},${Math.min(255, qg)},${Math.min(255, qb)}`;
+
+            colorBuckets[key] = (colorBuckets[key] || 0) + 1;
+        }
+
+        // Ordena por frequência
+        const sorted = Object.entries(colorBuckets)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 6);
+
+        currentColors = sorted.map(([k]) => {
+            const [r, g, b] = k.split(',').map(Number);
+            return rgbToHex(r, g, b);
+        });
+
+        renderPaletteSwatches();
+    }
+
+    function rgbToHex(r, g, b) {
+        return "#" + [r, g, b].map(x => {
+            const hex = x.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }).join('').toUpperCase();
+    }
+
+    // 4. Renderiza Amostras na Paleta
+    function renderPaletteSwatches() {
+        paletteSwatches.innerHTML = '';
+        if (currentColors.length === 0) {
+            paletteSwatches.innerHTML = '<span class="text-muted small fst-italic">Nenhuma cor identificada.</span>';
+            paletteCountBadge.textContent = '0 cores';
+            return;
+        }
+
+        paletteCountBadge.textContent = `${currentColors.length} cores`;
+
+        currentColors.forEach((hex, idx) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'd-flex align-items-center gap-1.5 p-1 border rounded-3 bg-body shadow-xs';
+            wrap.innerHTML = `
+                <div class="rounded-2 border" style="width: 24px; height: 24px; background-color: ${hex};"></div>
+                <span class="font-monospace small fw-bold text-body" style="font-size: 0.78rem;">${hex}</span>
+                <button type="button" class="btn btn-xs text-danger p-0 ms-1 remove-color-btn" data-idx="${idx}" title="Remover">&times;</button>
+            `;
+            paletteSwatches.appendChild(wrap);
+        });
+
+        // Eventos de remoção
+        document.querySelectorAll('.remove-color-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const idx = parseInt(this.dataset.idx, 10);
+                currentColors.splice(idx, 1);
+                renderPaletteSwatches();
+            });
+        });
+    }
+
+    // 5. Conta-gotas Interativo no Canvas
+    imageCanvas.addEventListener('mousemove', function(e) {
+        const rect = imageCanvas.getBoundingClientRect();
+        const scaleX = imageCanvas.width / rect.width;
+        const scaleY = imageCanvas.height / rect.height;
+        const x = Math.floor((e.clientX - rect.left) * scaleX);
+        const y = Math.floor((e.clientY - rect.top) * scaleY);
+
+        if (x >= 0 && x < imageCanvas.width && y >= 0 && y < imageCanvas.height) {
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+            colorLoupe.classList.remove('d-none');
+            colorLoupe.style.left = (e.clientX - rect.left) + 'px';
+            colorLoupe.style.top = (e.clientY - rect.top) + 'px';
+            colorLoupe.style.backgroundColor = hex;
+        }
+    });
+
+    imageCanvas.addEventListener('mouseleave', function() {
+        colorLoupe.classList.add('d-none');
+    });
+
+    imageCanvas.addEventListener('click', function(e) {
+        const rect = imageCanvas.getBoundingClientRect();
+        const scaleX = imageCanvas.width / rect.width;
+        const scaleY = imageCanvas.height / rect.height;
+        const x = Math.floor((e.clientX - rect.left) * scaleX);
+        const y = Math.floor((e.clientY - rect.top) * scaleY);
+
+        const pixel = ctx.getImageData(x, y, 1, 1).data;
+        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+
+        if (!currentColors.includes(hex)) {
+            currentColors.push(hex);
+            renderPaletteSwatches();
+        }
+    });
+
+    // Suporte a API Nativa de Conta-Gotas do Navegador
+    if (window.EyeDropper) {
+        nativeEyeDropperBtn.addEventListener('click', async () => {
+            try {
+                const dropper = new EyeDropper();
+                const result = await dropper.open();
+                if (result && result.sRGBHex) {
+                    const hex = result.sRGBHex.toUpperCase();
+                    if (!currentColors.includes(hex)) {
+                        currentColors.push(hex);
+                        renderPaletteSwatches();
+                    }
+                }
+            } catch (err) {
+                console.log("Conta-gotas cancelado");
+            }
+        });
+    } else {
+        nativeEyeDropperBtn.classList.add('d-none');
+    }
+
+    // 6. Botões de Amostras Rápidas
+    document.querySelectorAll('.sample-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const colors = this.dataset.colors.split(',');
+            currentColors = [...colors];
+            materialSelect.value = this.dataset.type === 'figurine' ? 'PLA' : (this.dataset.type === 'mechanical' ? 'PETG' : 'TPU');
+            itemDescriptionInput.value = this.dataset.name;
+            renderPaletteSwatches();
+            analyzeBtn.click();
+        });
+    });
+
+    // 7. Botão Limpar
+    clearBtn.addEventListener('click', function() {
+        currentColors = [];
+        currentImageBase64 = null;
+        previewContainer.classList.add('d-none');
+        document.getElementById('resultsContent').classList.add('d-none');
+        document.getElementById('resultsPlaceholder').classList.remove('d-none');
+        itemDescriptionInput.value = '';
+        renderPaletteSwatches();
+    });
+
+    // 8. Envio e Análise da Requisição
+    analyzeBtn.addEventListener('click', async function() {
+        if (currentColors.length === 0) {
+            alert('Por favor, faça upload de uma imagem ou selecione uma amostra rápida com cores.');
+            return;
+        }
+
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Analisando cores e buscando preços...';
+
+        const payload = {
+            colors: currentColors,
+            material: materialSelect.value,
+            description: itemDescriptionInput.value,
+            image_b64: currentImageBase64,
+            mime_type: currentMimeType
+        };
+
+        const storedKey = localStorage.getItem('bambu_gemini_api_key') || '';
+
+        try {
+            const resp = await fetch('/api/cores/analisar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-gemini-key': storedKey
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (resp.ok) {
+                const data = await resp.json();
+                renderResults(data);
+            } else {
+                alert('Erro ao processar análise. Verifique sua conexão e tente novamente.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao conectar ao servidor.');
+        } finally {
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '<i class="bi bi-search me-2"></i> Analisar Cores & Buscar Melhores Preços';
+        }
+    });
+
+    // 9. Renderização dos Resultados na Interface
+    function renderResults(data) {
+        document.getElementById('resultsPlaceholder').classList.add('d-none');
+        const resultsContent = document.getElementById('resultsContent');
+        resultsContent.classList.remove('d-none');
+
+        // Material
+        const mat = data.material_recommendation;
+        document.getElementById('matBadge').textContent = mat.material;
+        document.getElementById('matBadge').className = `badge bg-${mat.badge_color} rounded-pill px-3 py-1.5`;
+        document.getElementById('matTitle').textContent = mat.title;
+        document.getElementById('matReason').textContent = mat.reason;
+        document.getElementById('matAmsAlert').innerHTML = mat.ams_alert;
+        document.getElementById('matPreset').textContent = mat.bambu_studio_preset;
+
+        // AMS Slots
+        const amsContainer = document.getElementById('amsSlotsContainer');
+        amsContainer.innerHTML = '';
+        data.ams_slots.forEach(s => {
+            const col = document.createElement('div');
+            col.className = 'col';
+            col.innerHTML = `
+                <div class="p-3 border rounded-3 bg-body-tertiary text-center h-100 shadow-xs">
+                    <span class="badge bg-secondary-subtle text-secondary small rounded-pill mb-2">${s.slot}</span>
+                    <div class="mx-auto rounded-circle border border-2 border-white shadow-sm mb-2" style="width: 42px; height: 42px; background-color: ${s.bambu_hex};"></div>
+                    <strong class="d-block text-body small" style="font-size: 0.8rem;">${s.bambu_color}</strong>
+                    <span class="text-muted" style="font-size: 0.72rem;">${s.material} • Alternativa: ${s.national_brand}</span>
+                </div>
+            `;
+            amsContainer.appendChild(col);
+        });
+
+        // AI Vision Text (se houver)
+        const aiCard = document.getElementById('aiVisionCard');
+        if (data.ai_feedback) {
+            aiCard.classList.remove('d-none');
+            document.getElementById('aiVisionText').textContent = data.ai_feedback;
+        } else {
+            aiCard.classList.add('d-none');
+        }
+
+        // Cartões de Filamentos Correspondentes & Busca de Preços
+        const matchesContainer = document.getElementById('filamentMatchesContainer');
+        matchesContainer.innerHTML = '';
+
+        data.matched_colors.forEach((m, idx) => {
+            const b = m.bambu_match;
+            const n = m.national_match;
+
+            const card = document.createElement('div');
+            card.className = 'border rounded-4 p-3.5 bg-body shadow-xs';
+            card.innerHTML = `
+                <div class="row align-items-center g-3">
+                    <!-- Amostra de Cor da Imagem -->
+                    <div class="col-md-3 text-center border-md-end pe-md-3">
+                        <span class="text-muted small d-block mb-1">Cor da Imagem #${idx + 1}</span>
+                        <div class="rounded-3 border border-2 mx-auto mb-1.5 shadow-sm" style="width: 54px; height: 54px; background-color: ${m.target_hex};"></div>
+                        <span class="font-monospace fw-bold small text-body">${m.target_hex}</span>
+                    </div>
+
+                    <!-- Filamento Oficial Bambu Lab -->
+                    <div class="col-md-5">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-success-subtle text-success small rounded-pill">Oficial Bambu Lab</span>
+                            <span class="badge bg-body border small rounded-pill text-muted">${b.accuracy_pct}% similar</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="rounded-circle border" style="width: 22px; height: 22px; background-color: ${b.hex};"></div>
+                            <strong class="text-body">${b.line} - ${b.name}</strong>
+                        </div>
+                        <div class="small text-muted mb-2">
+                            <i class="bi bi-tag text-success me-1"></i> Código: ${b.code} • RFID Integrado
+                        </div>
+                        <div class="d-flex flex-wrap gap-1.5">
+                            <a href="${b.search_links.mercadolivre}" target="_blank" class="btn btn-xs btn-outline-warning text-dark py-1 px-2 rounded-2 small" style="font-size: 0.75rem;">
+                                <strong>Mercado Livre</strong> <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            </a>
+                            <a href="${b.search_links.shopee}" target="_blank" class="btn btn-xs btn-outline-danger py-1 px-2 rounded-2 small" style="font-size: 0.75rem;">
+                                <strong>Shopee</strong> <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            </a>
+                            <a href="${b.search_links.amazon}" target="_blank" class="btn btn-xs btn-outline-dark py-1 px-2 rounded-2 small" style="font-size: 0.75rem;">
+                                <strong>Amazon</strong> <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            </a>
+                            <a href="${b.search_links.google_shopping}" target="_blank" class="btn btn-xs btn-outline-primary py-1 px-2 rounded-2 small" style="font-size: 0.75rem;">
+                                <strong>Google Shopping</strong> <i class="bi bi-search ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Alternativa Nacional Custo-Benefício -->
+                    <div class="col-md-4 border-md-start ps-md-3 bg-body-tertiary p-3 rounded-3">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-secondary-subtle text-secondary small rounded-pill">Alternativa Nacional</span>
+                            <span class="badge bg-success small text-white">${n ? n.price_avg : 'R$ 79 - 95'}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="rounded-circle border" style="width: 20px; height: 20px; background-color: ${n ? n.hex : '#888'};"></div>
+                            <strong class="text-body small">${n ? n.brand + ' - ' + n.name : 'Voolt3D / 3D Fila'}</strong>
+                        </div>
+                        <div class="d-flex flex-wrap gap-1.5 mt-2">
+                            <a href="${n ? n.search_links.mercadolivre : b.search_links.mercadolivre}" target="_blank" class="btn btn-xs btn-outline-secondary py-1 px-2 rounded-2 small" style="font-size: 0.75rem;">
+                                Comparar no ML <i class="bi bi-search ms-1"></i>
+                            </a>
+                            <a href="${n ? n.search_links.shopee : b.search_links.shopee}" target="_blank" class="btn btn-xs btn-outline-secondary py-1 px-2 rounded-2 small" style="font-size: 0.75rem;">
+                                Comparar na Shopee <i class="bi bi-search ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            matchesContainer.appendChild(card);
+        });
+
+        // Scroll suave até os resultados
+        resultsContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // 10. Copiar Código de Cupom
+    document.querySelectorAll('.copy-coupon-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const code = this.dataset.code;
+            navigator.clipboard.writeText(code).then(() => {
+                const toastEl = document.getElementById('couponToast');
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
