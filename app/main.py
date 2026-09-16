@@ -409,6 +409,7 @@ async def api_chat(request: Request):
     image_b64 = body.get("image_b64")
     mime_type = body.get("mime_type")
     current_path = body.get("current_path")
+    api_key = (request.headers.get("x-gemini-key") or body.get("api_key") or "").strip()
 
     result = ask_agent(
         query,
@@ -416,7 +417,8 @@ async def api_chat(request: Request):
         history=history,
         image_b64=image_b64,
         mime_type=mime_type,
-        current_path=current_path
+        current_path=current_path,
+        api_key=api_key,
     )
     return JSONResponse(result)
 
@@ -435,6 +437,7 @@ async def api_chat_stream(request: Request):
     image_b64 = body.get("image_b64")
     mime_type = body.get("mime_type")
     current_path = body.get("current_path")
+    api_key = (request.headers.get("x-gemini-key") or body.get("api_key") or "").strip()
 
     return StreamingResponse(
         stream_agent_response(
@@ -443,7 +446,8 @@ async def api_chat_stream(request: Request):
             history=history,
             image_b64=image_b64,
             mime_type=mime_type,
-            current_path=current_path
+            current_path=current_path,
+            api_key=api_key,
         ),
         media_type="text/event-stream"
     )

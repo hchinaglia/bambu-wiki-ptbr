@@ -395,19 +395,23 @@ async function handleDrawerChatSubmit(e) {
     messages.scrollTop = messages.scrollHeight;
 
     let fullText = "";
-    let sources = [];
+    let sourc    const userApiKey = localStorage.getItem("bambu_gemini_api_key") || "";
 
     try {
         const response = await fetch("/api/chat/stream", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "x-gemini-key": userApiKey
+            },
             body: JSON.stringify({
                 query: userText,
                 model: selectedModel,
                 history: drawerHistory,
                 image_b64: imgToSendB64,
                 mime_type: mimeToSend,
-                current_path: window.location.pathname.replace(/^\/wiki\//, "").replace(/\/$/, "")
+                current_path: window.location.pathname.replace(/^\/wiki\//, "").replace(/\/$/, ""),
+                api_key: userApiKey
             })
         });
 
@@ -447,20 +451,40 @@ async function handleDrawerChatSubmit(e) {
                                 if (srcEl) {
                                     srcEl.innerHTML = `
                                         <div class="mt-2 pt-1.5 border-top">
-                                            <span class="text-muted text-uppercase d-block mb-1 fw-bold" style="font-size: 0.65rem;">
-                                                <i class="bi bi-bookmarks text-success me-1"></i> Fontes na Wiki:
-                                            </span>
-                                            <div class="d-flex flex-wrap gap-1">
-                                                ${sources.map(s => `
-                                                    <a href="${s.path}" class="badge bg-light text-dark border text-decoration-none py-1 px-1.5" style="font-size: 0.68rem;">
-                                                        <i class="bi bi-file-earmark-text text-success me-0.5"></i> ${escapeHtml(s.title)}
-                                                    </a>
-                                                `).join("")}
-                                            </div>
-                                        </div>
-                                    `;
+                                             <span class="text-muted text-uppercase d-block mb-1 fw-bold" style="font-size: 0.65rem;">
+                                                 <i class="bi bi-bookmarks text-success me-1"></i> Fontes na Wiki:
+                                             </span>
+                                             <div class="d-flex flex-wrap gap-1">
+                                                 ${sources.map(s => `
+                                                     <a href="${s.path}" class="badge bg-light text-dark border text-decoration-none py-1 px-1.5" style="font-size: 0.68rem;">
+                                                         <i class="bi bi-file-earmark-text text-success me-0.5"></i> ${escapeHtml(s.title)}
+                                                     </a>
+                                                 `).join("")}
+                                             </div>
+                                         </div>
+                                     `;
                                 }
                             }
+                        } else if (evt.type === "error") {
+                            const badge = botMsgDiv.querySelector(".drawer-model-badge");
+                            if (badge) {
+                                badge.className = "drawer-model-badge badge bg-danger text-white rounded-pill";
+                                badge.innerText = "Atenção";
+                            }
+                            const body = botMsgDiv.querySelector(".drawer-markdown-body");
+                            if (body) {
+                                body.innerHTML = `
+                                    <div class="alert alert-warning border-warning p-2.5 rounded-3 mb-2 small">
+                                        <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                                        <strong>${escapeHtml(evt.message || "Erro de conexão com o Gemini.")}</strong>
+                                    </div>
+                                    <p class="small text-muted mb-2" style="font-size: 0.75rem;">Para conversar com a IA, insira sua chave gratuita da API Gemini:</p>
+                                    <button class="btn btn-sm btn-success py-1 px-2.5 rounded-pill small" onclick="const c = document.getElementById('drawerApiKeyCollapse'); if(c) { c.classList.toggle('show'); document.getElementById('drawerApiKeyInput')?.focus(); }">
+                                        <i class="bi bi-key-fill me-1"></i> Configurar Chave Gemini
+                                    </button>
+                                `;
+                            }
+                            break;
                         }
                     } catch (pErr) {
                         console.error("Erro SSE:", pErr);
@@ -469,8 +493,10 @@ async function handleDrawerChatSubmit(e) {
             }
         }
 
-        drawerHistory.push({ role: "user", text: userText });
-        drawerHistory.push({ role: "model", text: fullText });
+        if (fullText) {
+            drawerHistory.push({ role: "user", text: userText });
+            drawerHistory.push({ role: "model", text: fullText });
+        }
 
     } catch (err) {
         console.error("Erro na gaveta:", err);
@@ -482,3 +508,72 @@ async function handleDrawerChatSubmit(e) {
         input.focus();
     }
 }
+
+// Inicialização da Gestão de Chave API Gemini no Navegador
+function initApiKeyManagement() {
+    const savedKey = localStorage.getItem("bambu_gemini_api_key") || "";
+    
+    // Atualiza campo e status da gaveta
+    const drawerInput = document.getElementById("drawerApiKeyInput");
+    const drawerStatus = document.getElementById("drawerApiKeyStatus");
+    const drawerSaveBtn = document.getElementById("saveDrawerApiKeyBtn");
+    
+    if (drawerInput && savedKey) drawerInput.value = savedKey;
+    if (drawerStatus) {
+        if (savedKey) {
+            drawerStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Chave ativa: <code>${savedKey.substring(0, 8)}...${savedKey.slice(-4)}</code></span>`;
+        } else {
+            drawerStatus.innerHTML = `<span class="text-muted">Nenhuma chave salva.</span>`;
+        }
+    }
+
+    if (drawerSaveBtn) {
+        drawerSaveBtn.addEventListener("click", function() {
+            const val = (drawerInput ? drawerInput.value : "").trim();
+            if (val) {
+                localStorage.setItem("bambu_gemini_api_key", val);
+                if (drawerStatus) drawerStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Chave salva com sucesso!</span>`;
+                setTimeout(() => {
+                    const c = document.getElementById("drawerApiKeyCollapse");
+                    if (c) c.classList.remove("show");
+                }, 1200);
+            } else {
+                localStorage.removeItem("bambu_gemini_api_key");
+                if (drawerStatus) drawerStatus.innerHTML = `<span class="text-muted">Chave removida.</span>`;
+            }
+        });
+    }
+
+    // Atualiza campo e status na página /chat
+    const chatInput = document.getElementById("chatApiKeyInput");
+    const chatStatus = document.getElementById("chatApiKeyStatus");
+    const chatSaveBtn = document.getElementById("saveChatApiKeyBtn");
+
+    if (chatInput && savedKey) chatInput.value = savedKey;
+    if (chatStatus) {
+        if (savedKey) {
+            chatStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Chave ativa: <code>${savedKey.substring(0, 8)}...${savedKey.slice(-4)}</code></span>`;
+        } else {
+            chatStatus.innerHTML = `<span class="text-muted">Nenhuma chave personalizada salva.</span>`;
+        }
+    }
+
+    if (chatSaveBtn) {
+        chatSaveBtn.addEventListener("click", function() {
+            const val = (chatInput ? chatInput.value : "").trim();
+            if (val) {
+                localStorage.setItem("bambu_gemini_api_key", val);
+                if (chatStatus) chatStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Chave salva com sucesso!</span>`;
+                setTimeout(() => {
+                    const c = document.getElementById("chatApiKeyCollapse");
+                    if (c) c.classList.remove("show");
+                }, 1200);
+            } else {
+                localStorage.removeItem("bambu_gemini_api_key");
+                if (chatStatus) chatStatus.innerHTML = `<span class="text-muted">Chave removida.</span>`;
+            }
+        });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initApiKeyManagement);

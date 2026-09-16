@@ -265,12 +265,22 @@ def ask_agent(
     history: Optional[List[Dict[str, str]]] = None,
     image_b64: Optional[str] = None,
     mime_type: Optional[str] = None,
-    current_path: Optional[str] = None
+    current_path: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Resposta síncrona/completa do agente."""
     if not question or not question.strip():
         return {
             "answer": "Por favor, digite uma pergunta para que eu possa pesquisar na Wiki Bambu Lab.",
+            "model_used": "none",
+            "sources": [],
+            "status": "error"
+        }
+
+    active_key = (api_key or "").strip() or GEMINI_API_KEY
+    if not active_key:
+        return {
+            "answer": "⚠️ **Nenhuma chave da API Gemini informada.**\n\nPor favor, insira sua chave gratuita do Google Gemini no menu de configurações do chat (ícone ⚙️) para conversar com a IA. Você pode gerar uma chave gratuita em [aistudio.google.com](https://aistudio.google.com/).",
             "model_used": "none",
             "sources": [],
             "status": "error"
@@ -289,7 +299,7 @@ def ask_agent(
     last_error = None
     for model_name in models_to_try:
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={active_key}"
             payload = {
                 "contents": contents,
                 "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
@@ -311,13 +321,30 @@ def ask_agent(
                     "sources": sources,
                     "status": "success"
                 }
+        except urllib.error.HTTPError as e:
+            try:
+                err_json = json.loads(e.read().decode("utf-8"))
+                last_error = err_json.get("error", {}).get("message", str(e))
+            except Exception:
+                last_error = str(e)
+            print(f"Aviso: Modelo {model_name} falhou com HTTP {e.code}: {last_error}", flush=True)
+            if "leaked" in last_error.lower() or "not valid" in last_error.lower():
+                break
+            continue
         except Exception as e:
             last_error = str(e)
             print(f"Aviso: Modelo {model_name} falhou ({e}). Tentando próximo...", flush=True)
             continue
 
+    if last_error and "leaked" in last_error.lower():
+        msg = "⚠️ **Chave do Gemini Bloqueada pelo Google:**\n\nSua chave de API foi reportada pelo Google como vazada publicamente no GitHub e revogada por segurança. Por favor, gere uma nova chave em [aistudio.google.com](https://aistudio.google.com/) e salve-a no ícone ⚙️ acima."
+    elif last_error and "not valid" in last_error.lower():
+        msg = "⚠️ **Chave da API Gemini Inválida:**\n\nVerifique se a chave digitada está correta no menu de configurações (ícone ⚙️)."
+    else:
+        msg = f"Desculpe, ocorreu uma instabilidade ao conectar ao Gemini: {last_error}. Tente novamente em instantes."
+
     return {
-        "answer": f"Desculpe, ocorreu uma instabilidade temporária ao conectar aos servidores do Gemini. Erro: {last_error}",
+        "answer": msg,
         "model_used": "failed",
         "sources": sources,
         "status": "error"
@@ -334,11 +361,17 @@ def stream_agent_response(
     history: Optional[List[Dict[str, str]]] = None,
     image_b64: Optional[str] = None,
     mime_type: Optional[str] = None,
-    current_path: Optional[str] = None
+    current_path: Optional[str] = None,
+    api_key: Optional[str] = None,
 ) -> Generator[str, None, None]:
     """
     Gerador para Server-Sent Events (SSE) transmitindo a resposta token a token em tempo real.
     """
+    active_key = (api_key or "").strip() or GEMINI_API_KEY
+    if not active_key:
+        yield f"data: {json.dumps({'type': 'error', 'message': 'Nenhuma chave da API Gemini configurada. Insira sua chave no ícone ⚙️ para conversar com a IA.'})}\n\n"
+        return
+
     context_text, sources = retrieve_wiki_context(question, current_path=current_path, limit=4)
     contents = build_contents_payload(question, context_text, history, image_b64, mime_type)
 
@@ -347,9 +380,10 @@ def stream_agent_response(
     else:
         models_to_try = [selected_model] + [m for m in AUTO_FALLBACK_ORDER if m != selected_model]
 
+    last_error = None
     for model_name in models_to_try:
         try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:streamGenerateContent?alt=sse&key={GEMINI_API_KEY}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:streamGenerateContent?alt=sse&key={active_key}"
             payload = {
                 "contents": contents,
                 "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
@@ -379,13 +413,24 @@ def stream_agent_response(
                 if not first_chunk:
                     yield f"data: {json.dumps({'type': 'done'})}\n\n"
                     return
+        except urllib.error.HTTPError as e:
+            try:
+                err_json = json.loads(e.read().decode("utf-8"))
+                last_error = err_json.get("error", {}).get("message", str(e))
+            except Exception:
+                last_error = str(e)
+            print(f"Streaming falhou com {model_name} HTTP {e.code}: {last_error}", flush=True)
+            if "leaked" in last_error.lower() or "not valid" in last_error.lower():
+                break
+            continue
         except Exception as e:
+            last_error = str(e)
             print(f"Streaming falhou com {model_name} ({e}). Tentando próximo modelo...", flush=True)
             continue
 
     # Fallback final com generateContent síncrono dividido em tokens caso alt=sse falhe
     try:
-        res = ask_agent(question, selected_model=selected_model, history=history, image_b64=image_b64, mime_type=mime_type, current_path=current_path)
+        res = ask_agent(question, selected_model=selected_model, history=history, image_b64=image_b64, mime_type=mime_type, current_path=current_path, api_key=active_key)
         if res.get("status") == "success":
             yield f"data: {json.dumps({'type': 'init', 'model': res.get('model_used', 'gemini'), 'sources': res.get('sources', [])})}\n\n"
             answer = res.get("answer", "")
@@ -395,7 +440,17 @@ def stream_agent_response(
                 yield f"data: {json.dumps({'type': 'token', 'token': chunk})}\n\n"
             yield f"data: {json.dumps({'type': 'done'})}\n\n"
             return
+        elif res.get("answer"):
+            last_error = res.get("answer")
     except Exception as e:
         print(f"Fallback síncrono também falhou: {e}", flush=True)
+        last_error = str(e)
 
-    yield f"data: {json.dumps({'type': 'error', 'message': 'Não foi possível conectar aos servidores do Gemini. Tente novamente em instantes.'})}\n\n"
+    if last_error and "leaked" in str(last_error).lower():
+        err_msg = "Sua chave da API Gemini foi bloqueada pelo Google (detectada como pública no GitHub). Por favor, gere uma nova chave em aistudio.google.com e configure-a no ícone ⚙️."
+    elif last_error and "not valid" in str(last_error).lower():
+        err_msg = "Chave da API Gemini inválida. Por favor, verifique a chave inserida no ícone ⚙️."
+    else:
+        err_msg = f"Instabilidade na API do Gemini: {last_error or 'Tente novamente em instantes'}."
+
+    yield f"data: {json.dumps({'type': 'error', 'message': err_msg})}\n\n"

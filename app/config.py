@@ -4,11 +4,8 @@ Configurações da aplicação e chaves de API.
 
 import os
 
-# Chave da API do Google Gemini
-GEMINI_API_KEY = os.environ.get(
-    "GEMINI_API_KEY",
-    "AIzaSyBLLcxsuqLl1KnyKvszoQbTkegAxDRDiw0"
-)
+# Chave da API do Google Gemini (configurável via variável de ambiente ou direto na UI do chat)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 # Lista de modelos suportados conforme solicitado
 SUPPORTED_MODELS = [

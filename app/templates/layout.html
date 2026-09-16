@@ -168,7 +168,7 @@
             </div>
         </div>
         
-        <!-- Seletor de Modelo no Topo da Gaveta -->
+        <!-- Seletor de Modelo e Configurações no Topo da Gaveta -->
         <div class="p-2 border-bottom bg-light d-flex align-items-center justify-content-between gap-2">
             <span class="small text-muted fw-semibold" style="font-size: 0.75rem;">Modelo:</span>
             <select id="drawerModelSelect" class="form-select form-select-sm border-0 bg-white shadow-xs" style="font-size: 0.8rem;">
@@ -180,6 +180,31 @@
                 <option value="gemini-3.5-flash-lite">⚡ gemini-3.5-flash-lite</option>
                 <option value="gemini-3.1-flash-lite">⚡ gemini-3.1-flash-lite</option>
             </select>
+            <button class="btn btn-sm btn-outline-secondary px-2 py-1 flex-shrink-0" type="button" data-bs-toggle="collapse" data-bs-target="#drawerApiKeyCollapse" title="Configurar Chave da API Gemini" id="openDrawerApiKeyBtn">
+                <i class="bi bi-gear-fill"></i>
+            </button>
+        </div>
+
+        <!-- Painel Colapsável de Configuração da Chave Gemini -->
+        <div class="collapse p-3 bg-body-tertiary border-bottom" id="drawerApiKeyCollapse">
+            <div class="d-flex justify-content-between align-items-center mb-1.5">
+                <span class="small fw-bold text-success d-flex align-items-center gap-1">
+                    <i class="bi bi-key-fill"></i> Chave da API Google Gemini
+                </span>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="small text-success text-decoration-none fw-medium" style="font-size: 0.7rem;">
+                    Obter Chave Grátis <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            </div>
+            <p class="text-muted small mb-2" style="font-size: 0.73rem; line-height: 1.35;">
+                Insira sua chave própria para conversar com o assistente sem bloqueios ou limites públicos. Fica salva com segurança no seu navegador.
+            </p>
+            <div class="input-group input-group-sm mb-1.5">
+                <input type="password" id="drawerApiKeyInput" class="form-control" placeholder="Cole sua chave AIzaSy... aqui">
+                <button class="btn btn-success" type="button" id="saveDrawerApiKeyBtn">Salvar</button>
+            </div>
+            <div class="small" id="drawerApiKeyStatus" style="font-size: 0.7rem;">
+                <span class="text-muted">Nenhuma chave personalizada salva.</span>
+            </div>
         </div>
 
         <!-- Área de Mensagens da Gaveta -->
