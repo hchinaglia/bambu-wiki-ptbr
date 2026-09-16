@@ -1,0 +1,443 @@
+{% extends "layout.html" %}
+
+{% block title %}Assistente IA da Wiki Bambu Lab Brasil{% endblock %}
+
+{% block main_content %}
+<div class="row g-4">
+
+    <!-- Barra Lateral Esquerda -->
+    <aside class="col-lg-3 d-none d-lg-block">
+        <div class="sidebar-sticky p-3 rounded-3 border bg-body shadow-xs">
+            {% include "sidebar_menu.html" %}
+        </div>
+    </aside>
+
+    <!-- Área Central de Chat com o Agente -->
+    <main class="col-lg-9 col-md-12">
+        <div class="card border rounded-4 shadow-sm overflow-hidden d-flex flex-column" style="min-height: 75vh;">
+
+            <!-- Cabeçalho do Chat -->
+            <div class="card-header bg-body border-bottom p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-success text-white p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-robot fs-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="h6 fw-bold mb-0">Assistente IA da Wiki Bambu Lab</h1>
+                        <span class="text-muted small">Pesquisa em tempo real nos 2.486 artigos da base</span>
+                    </div>
+                </div>
+
+                <!-- Seletor de Modelo Gemini -->
+                <div class="d-flex align-items-center gap-2">
+                    <label for="modelSelect" class="small text-muted fw-medium d-none d-sm-inline">Modelo:</label>
+                    <select id="modelSelect" class="form-select form-select-sm border-success-subtle shadow-none" style="min-width: 220px;">
+                        <option value="auto" selected>🤖 Automático (Recomendado)</option>
+                        <option value="gemini-3.8-flash">⚡ gemini-3.8-flash</option>
+                        <option value="gemini-3.7-flash">⚡ gemini-3.7-flash</option>
+                        <option value="gemini-3.6-flash">⚡ gemini-3.6-flash</option>
+                        <option value="gemini-3.5-flash">⚡ gemini-3.5-flash</option>
+                        <option value="gemini-3.5-flash-lite">⚡ gemini-3.5-flash-lite</option>
+                        <option value="gemini-3.1-flash-lite">⚡ gemini-3.1-flash-lite</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Corpo das Mensagens -->
+            <div id="chatMessages" class="card-body p-4 flex-grow-1 overflow-y-auto" style="max-height: 55vh; background-color: var(--bg-body);">
+                <!-- Mensagem de Boas-Vindas -->
+                <div class="chat-message bot-message d-flex gap-3 mb-4">
+                    <div class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="message-content bg-body border rounded-4 p-3 shadow-xs" style="max-width: 85%;">
+                        <p class="mb-2">Olá! Eu sou o <strong>Assistente Oficial da Wiki Bambu Lab Brasil</strong>.</p>
+                        <p class="mb-2 text-muted small">
+                            Você pode me fazer qualquer pergunta sobre impressoras (X1, P1S, A1, AMS), procedimentos de manutenção, fatiamento no Bambu Studio ou códigos de erro. Eu busco nos artigos técnicos e respondo com as fontes citadas.
+                        </p>
+                        <div class="suggested-prompts d-flex flex-wrap gap-1.5 mt-2">
+                            <button class="btn btn-sm btn-outline-secondary prompt-chip" onclick="sendQuickPrompt('Como ajustar a correia da impressora X1?')">
+                                🔧 Ajustar correia da X1
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary prompt-chip" onclick="sendQuickPrompt('O que fazer quando a primeira camada descola da mesa?')">
+                                🥞 Primeira camada descolando
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary prompt-chip" onclick="sendQuickPrompt('Como o AMS identifica os filamentos por RFID?')">
+                                🎨 Como funciona o AMS RFID
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary prompt-chip" onclick="sendQuickPrompt('Qual a diferença prática entre P1P e P1S?')">
+                                🆚 Diferença entre P1P e P1S
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pré-visualização de Imagem Anexada -->
+            <div id="chatImagePreview" class="px-3 py-2 border-top bg-light d-none align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <img id="chatPreviewImg" src="" alt="Preview" style="max-height: 48px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <div>
+                        <span class="small fw-semibold text-body d-block" id="chatImageName">foto.png</span>
+                        <span class="text-muted small" style="font-size: 0.72rem;">Imagem pronta para análise multimodal</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearChatImage()"><i class="bi bi-trash me-1"></i> Remover</button>
+            </div>
+
+            <!-- Rodapé / Caixa de Entrada -->
+            <div class="card-footer bg-body border-top p-3">
+                <form id="chatForm" onsubmit="handleChatSubmit(event)" class="d-flex gap-2">
+                    <label class="btn btn-outline-secondary d-flex align-items-center gap-1.5 flex-shrink-0" for="chatImageInput" title="Anexar foto para diagnóstico com Gemini Vision">
+                        <i class="bi bi-camera fs-5"></i>
+                        <span class="small d-none d-sm-inline">Foto</span>
+                        <input type="file" id="chatImageInput" accept="image/png, image/jpeg, image/webp" class="d-none" onchange="handleChatImageUpload(event)">
+                    </label>
+                    <input type="text" id="chatInput" class="form-control" placeholder="Faça uma pergunta ou anexe uma foto da peça/erro..." autocomplete="off" autofocus>
+                    <button type="submit" id="sendBtn" class="btn btn-success px-4 d-flex align-items-center gap-1.5 fw-semibold">
+                        <span>Enviar</span>
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </form>
+                <div class="d-flex justify-content-between align-items-center mt-2 px-1">
+                    <span class="text-muted" style="font-size: 0.75rem;">
+                        <i class="bi bi-shield-check text-success me-1"></i> Respostas fundamentadas no acervo local da Wiki Bambu Lab.
+                    </span>
+                    <span id="activeModelBadge" class="badge bg-light text-muted border small" style="font-size: 0.7rem;">
+                        Modelo: Automático
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+const chatMessages = document.getElementById("chatMessages");
+const chatInput = document.getElementById("chatInput");
+const chatForm = document.getElementById("chatForm");
+const sendBtn = document.getElementById("sendBtn");
+const modelSelect = document.getElementById("modelSelect");
+const activeModelBadge = document.getElementById("activeModelBadge");
+
+let chatHistory = [];
+let attachedImageB64 = null;
+let attachedImageMime = null;
+
+// Verifica se veio com query na URL ou quick_prompt
+window.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get("q") || localStorage.getItem("quick_prompt");
+    if (q) {
+        localStorage.removeItem("quick_prompt");
+        chatInput.value = q;
+        setTimeout(() => chatForm.dispatchEvent(new Event("submit")), 200);
+    }
+});
+
+modelSelect.addEventListener("change", () => {
+    const val = modelSelect.value;
+    activeModelBadge.innerText = val === "auto" ? "Modelo: Automático" : `Modelo: ${val}`;
+});
+
+function handleChatImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    attachedImageMime = file.type;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const fullDataUrl = event.target.result;
+        attachedImageB64 = fullDataUrl.split(",")[1];
+        document.getElementById("chatPreviewImg").src = fullDataUrl;
+        document.getElementById("chatImageName").innerText = file.name;
+        document.getElementById("chatImagePreview").classList.remove("d-none");
+        document.getElementById("chatImagePreview").classList.add("d-flex");
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearChatImage() {
+    attachedImageB64 = null;
+    attachedImageMime = null;
+    document.getElementById("chatImageInput").value = "";
+    document.getElementById("chatImagePreview").classList.add("d-none");
+    document.getElementById("chatImagePreview").classList.remove("d-flex");
+}
+
+function sendQuickPrompt(promptText) {
+    chatInput.value = promptText;
+    chatForm.dispatchEvent(new Event("submit"));
+}
+
+async function handleChatSubmit(e) {
+    e.preventDefault();
+    const query = chatInput.value.trim();
+    if (!query && !attachedImageB64) return;
+
+    const userText = query || "Analise esta imagem em busca de falhas de impressão 3D ou mensagens de erro:";
+    const selectedModel = modelSelect.value;
+    const imgToSendB64 = attachedImageB64;
+    const mimeToSend = attachedImageMime;
+
+    // Adiciona mensagem do usuário
+    appendUserMessage(userText, imgToSendB64 ? `data:${mimeToSend};base64,${imgToSendB64}` : null);
+    
+    // Limpa input e imagem anexada
+    chatInput.value = "";
+    clearChatImage();
+    chatInput.disabled = true;
+    sendBtn.disabled = true;
+
+    // Elemento onde o bot responderá com streaming
+    const botMsgId = "msg-" + Date.now();
+    const botEl = createStreamingBotMessage(botMsgId);
+    let fullResponseText = "";
+    let currentSources = [];
+    let usedModelName = selectedModel;
+
+    try {
+        const response = await fetch("/api/chat/stream", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                query: userText,
+                model: selectedModel,
+                history: chatHistory,
+                image_b64: imgToSendB64,
+                mime_type: mimeToSend,
+                current_path: window.location.pathname.replace(/^\/wiki\//, "").replace(/\/$/, "")
+            })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n\n");
+            buffer = lines.pop(); // Mantém pedaço incompleto no buffer
+
+            for (const chunk of lines) {
+                if (chunk.startsWith("data: ")) {
+                    try {
+                        const event = JSON.parse(chunk.substring(6));
+                        if (event.type === "init") {
+                            usedModelName = event.model;
+                            currentSources = event.sources || [];
+                            updateBotModelBadge(botMsgId, usedModelName);
+                        } else if (event.type === "token") {
+                            fullResponseText += event.token;
+                            updateBotContent(botMsgId, fullResponseText);
+                        } else if (event.type === "done") {
+                            finalizeBotMessage(botMsgId, fullResponseText, currentSources);
+                        } else if (event.type === "error") {
+                            updateBotContent(botMsgId, event.message);
+                        }
+                    } catch (pErr) {
+                        console.error("Erro ao decodificar SSE:", pErr);
+                    }
+                }
+            }
+        }
+
+        // Adiciona ao histórico da sessão
+        chatHistory.push({ role: "user", text: userText });
+        chatHistory.push({ role: "model", text: fullResponseText });
+
+    } catch (err) {
+        console.error("Erro no streaming:", err);
+        updateBotContent(botMsgId, "Erro de conexão ao consultar o assistente. Verifique a internet e tente novamente.");
+    } finally {
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+        chatInput.focus();
+    }
+}
+
+function appendUserMessage(text, imgSrc) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "chat-message user-message d-flex gap-3 mb-4 justify-content-end";
+    let imgHtml = imgSrc ? `<img src="${imgSrc}" class="d-block mb-2 rounded" style="max-height: 160px; max-width: 100%;">` : "";
+    msgDiv.innerHTML = `
+        <div class="message-content bg-success text-white rounded-4 p-3 shadow-xs" style="max-width: 80%;">
+            ${imgHtml}
+            <p class="mb-0">${escapeHtml(text)}</p>
+        </div>
+        <div class="avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+            <i class="bi bi-person"></i>
+        </div>
+    `;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function createStreamingBotMessage(msgId) {
+    const msgDiv = document.createElement("div");
+    msgDiv.id = msgId;
+    msgDiv.className = "chat-message bot-message d-flex gap-3 mb-4";
+    msgDiv.innerHTML = `
+        <div class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+            <i class="bi bi-robot"></i>
+        </div>
+        <div class="message-content bg-body border rounded-4 p-3 shadow-xs" style="max-width: 85%;">
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="fw-semibold small text-success">Bambu Lab IA</span>
+                <span class="model-badge badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size: 0.65rem;">
+                    Pesquisando na Wiki...
+                </span>
+            </div>
+            <div class="markdown-body small text-body" style="line-height: 1.65;">
+                <span class="placeholder-glow"><span class="placeholder col-6"></span></span>
+            </div>
+            <div class="sources-container"></div>
+        </div>
+    `;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return msgDiv;
+}
+
+function updateBotModelBadge(msgId, modelName) {
+    const msgEl = document.getElementById(msgId);
+    if (!msgEl) return;
+    const badge = msgEl.querySelector(".model-badge");
+    if (badge) badge.innerText = modelName;
+}
+
+function updateBotContent(msgId, markdownText) {
+    const msgEl = document.getElementById(msgId);
+    if (!msgEl) return;
+    const bodyEl = msgEl.querySelector(".markdown-body");
+    if (bodyEl) {
+        bodyEl.innerHTML = marked.parse(markdownText);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+function finalizeBotMessage(msgId, markdownText, sources) {
+    updateBotContent(msgId, markdownText);
+    const msgEl = document.getElementById(msgId);
+    if (!msgEl || !sources || sources.length === 0) return;
+
+    const sourcesEl = msgEl.querySelector(".sources-container");
+    if (sourcesEl) {
+        sourcesEl.innerHTML = `
+            <div class="mt-3 pt-2 border-top">
+                <span class="fw-bold small text-muted text-uppercase d-block mb-1.5" style="font-size: 0.72rem;">
+                    <i class="bi bi-bookmarks me-1 text-success"></i> Artigos Consultados na Wiki:
+                </span>
+                <div class="d-flex flex-wrap gap-1.5">
+                    ${sources.map(s => `
+                        <a href="${s.path}" target="_blank" class="badge bg-light text-dark border text-decoration-none py-1.5 px-2">
+                            <i class="bi bi-file-earmark-text me-1 text-success"></i> ${escapeHtml(s.title)}
+                        </a>
+                    `).join("")}
+                </div>
+            </div>
+        `;
+    }
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+        </div>
+        <div class="avatar rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+            <i class="bi bi-person"></i>
+        </div>
+    `;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function appendLoadingMessage() {
+    const id = "loading-" + Date.now();
+    const msgDiv = document.createElement("div");
+    msgDiv.id = id;
+    msgDiv.className = "chat-message bot-message d-flex gap-3 mb-4";
+    msgDiv.innerHTML = `
+        <div class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+            <i class="bi bi-robot"></i>
+        </div>
+        <div class="message-content bg-body border rounded-4 p-3 shadow-xs">
+            <div class="d-flex align-items-center gap-2 text-muted small">
+                <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+                <span>Consultando artigos técnicos da Wiki Bambu Lab...</span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return id;
+}
+
+function removeMessage(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function appendBotMessage(markdownText, modelUsed, sources) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "chat-message bot-message d-flex gap-3 mb-4";
+
+    let parsedHtml = marked.parse(markdownText);
+
+    let sourcesHtml = "";
+    if (sources && sources.length > 0) {
+        sourcesHtml = `
+            <div class="mt-3 pt-2 border-top">
+                <span class="fw-bold small text-muted text-uppercase d-block mb-1.5" style="font-size: 0.72rem;">
+                    <i class="bi bi-bookmarks me-1 text-success"></i> Artigos Consultados na Wiki:
+                </span>
+                <div class="d-flex flex-wrap gap-1.5">
+                    ${sources.map(s => `
+                        <a href="${s.path}" target="_blank" class="badge bg-light text-dark border text-decoration-none py-1.5 px-2">
+                            <i class="bi bi-file-earmark-text me-1 text-success"></i> ${escapeHtml(s.title)}
+                        </a>
+                    `).join("")}
+                </div>
+            </div>
+        `;
+    }
+
+    const modelBadge = modelUsed && modelUsed !== "none" ? `
+        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size: 0.65rem;">
+            ${modelUsed}
+        </span>
+    ` : "";
+
+    msgDiv.innerHTML = `
+        <div class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+            <i class="bi bi-robot"></i>
+        </div>
+        <div class="message-content bg-body border rounded-4 p-3 shadow-xs" style="max-width: 85%;">
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                <span class="fw-semibold small text-success">Bambu Lab IA</span>
+                ${modelBadge}
+            </div>
+            <div class="markdown-body small text-body" style="line-height: 1.65;">
+                ${parsedHtml}
+            </div>
+            ${sourcesHtml}
+        </div>
+    `;
+
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    const div = document.createElement("div");
+    div.innerText = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

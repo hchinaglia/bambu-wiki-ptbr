@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ section_info.name }} — Wiki Bambu Lab{% endblock %}
+
+{% block main_content %}
+<div class="row g-4">
+
+    <!-- Barra Lateral Esquerda (Desktop) -->
+    <aside class="col-lg-3 d-none d-lg-block">
+        <div class="sidebar-sticky p-3 rounded-3 border bg-body shadow-xs">
+            {% include "sidebar_menu.html" %}
+        </div>
+    </aside>
+
+    <!-- Conteúdo Central: Lista de Artigos da Seção -->
+    <main class="col-lg-9 col-md-12">
+        <div class="bg-body border rounded-4 p-4 p-md-5 shadow-xs">
+
+            <!-- Cabeçalho da Seção -->
+            <div class="d-flex align-items-center gap-3 border-bottom pb-4 mb-4">
+                <div class="category-icon-box rounded-3 bg-success-subtle text-success p-3">
+                    <i class="bi {{ section_info.icon }} fs-2"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">{{ section_info.name }}</h1>
+                    <p class="text-muted small mb-0">
+                        Manuais, procedimentos de montagem, calibração e guias técnicos.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Lista de Artigos -->
+            {% if articles and articles | length > 0 %}
+            <div class="row g-3">
+                {% for art in articles %}
+                <div class="col-md-6">
+                    <div class="card h-100 border rounded-3 p-3 transition-all hover-shadow">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-light text-muted border text-uppercase" style="font-size: 0.7rem;">
+                                {{ art.subsection or "Guia" }}
+                            </span>
+                            <span class="text-success small fw-medium">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </span>
+                        </div>
+                        <h2 class="h6 fw-bold mb-2">
+                            <a href="/wiki/{{ art.path }}" class="text-body text-decoration-none stretched-link">
+                                {{ art.title }}
+                            </a>
+                        </h2>
+                        <p class="text-muted small mb-0 text-truncate-2">
+                            {{ art.description or "Acesse o procedimento passo a passo." }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-journal-x fs-1 text-muted mb-3 d-block"></i>
+                <h3 class="h5 text-muted">Nenhum artigo baixado para esta seção ainda.</h3>
+                <p class="text-muted small">Você pode sincronizar os artigos executando o crawler:</p>
+                <code>python3 -m crawler.downloader --section {{ section_id }}</code>
+            </div>
+            {% endif %}
+
+        </div>
+    </main>
+
+</div>
+{% endblock %}

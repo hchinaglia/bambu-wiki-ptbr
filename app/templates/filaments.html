@@ -1,0 +1,147 @@
+{% extends "layout.html" %}
+
+{% block title %}Guia Interativo de Filamentos Bambu Lab — Temperaturas, AMS e Adesão{% endblock %}
+
+{% block main_content %}
+<div class="row g-4">
+
+    <!-- Barra Lateral Esquerda -->
+    <aside class="col-lg-3 d-none d-lg-block">
+        <div class="sidebar-sticky p-3 rounded-3 border bg-body shadow-xs">
+            {% include "sidebar_menu.html" %}
+        </div>
+    </aside>
+
+    <!-- Conteúdo Central: Matriz de Filamentos -->
+    <main class="col-lg-9 col-md-12">
+        <div class="bg-body border rounded-4 p-4 p-md-5 shadow-xs">
+
+            <!-- Cabeçalho -->
+            <div class="d-flex align-items-center gap-3 border-bottom pb-4 mb-4">
+                <div class="category-icon-box rounded-3 bg-success-subtle text-success p-3">
+                    <i class="bi bi-layers-fill fs-2"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Guia & Calculadora de Filamentos</h1>
+                    <p class="text-muted small mb-0">
+                        Matriz técnica oficial com temperaturas de bico e mesa, placas de impressão recomendadas, regras de uso de cola e compatibilidade com o sistema AMS.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filtros Interativos -->
+            <div class="row g-3 mb-4 p-3 bg-light rounded-3 border">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-muted text-uppercase mb-1">Filtrar por Impressora:</label>
+                    <select id="printerFilter" class="form-select shadow-none" onchange="filterFilaments()">
+                        <option value="Todos" selected>Todas as Impressoras</option>
+                        <option value="X1">Série X1 (X1 / X1-Carbon / X1E)</option>
+                        <option value="P1S">Série P1 (P1S / P1P)</option>
+                        <option value="A1">Série A1 (A1 / A1 Mini)</option>
+                        <option value="H2">Série H2</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-muted text-uppercase mb-1">Filtrar por Categoria:</label>
+                    <select id="categoryFilter" class="form-select shadow-none" onchange="filterFilaments()">
+                        <option value="Todos" selected>Todas as Categorias</option>
+                        <option value="Padrão">Padrão (PLA)</option>
+                        <option value="Técnico / Resistente">Técnico (PETG)</option>
+                        <option value="Engenharia">Engenharia (ABS / ASA / PC)</option>
+                        <option value="Flexível">Flexível (TPU)</option>
+                        <option value="Compósitos Reforçados">Compósitos (Fibras de Carbono CF)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Grade de Filamentos -->
+            <div id="filamentsGrid" class="row g-3">
+                {% for f in filaments %}
+                <div class="col-lg-6 filament-card-item" data-printers="{{ f.compatible_printers | join(' ') }}" data-category="{{ f.category }}">
+                    <div class="card h-100 border rounded-3 p-3 transition-all hover-shadow bg-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-light text-muted border text-uppercase" style="font-size: 0.68rem;">
+                                    {{ f.category }}
+                                </span>
+                                <h2 class="h6 fw-bold mb-0 text-body mt-1">{{ f.name }}</h2>
+                            </div>
+                            <span class="badge {% if 'NÃO' in f.ams_compatible %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-success-subtle text-success border border-success-subtle{% endif %} rounded-pill small">
+                                AMS: {{ 'Incompatível' if 'NÃO' in f.ams_compatible else 'Compatível' }}
+                            </span>
+                        </div>
+
+                        <p class="text-muted small mb-3">{{ f.description }}</p>
+
+                        <!-- Tabela Técnica Compacta -->
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm table-bordered small mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td class="bg-light fw-medium text-muted" style="width: 40%;">Temp. Bico</td>
+                                        <td class="fw-semibold text-body">{{ f.nozzle_temp }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="bg-light fw-medium text-muted">Temp. Mesa</td>
+                                        <td class="fw-semibold text-body">{{ f.bed_temp }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="bg-light fw-medium text-muted">Placa Ideal</td>
+                                        <td class="text-body">{{ f.recommended_plate }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="bg-light fw-medium text-muted">Uso de Cola</td>
+                                        <td class="text-body">{{ f.glue_needed }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="bg-light fw-medium text-muted">Secagem</td>
+                                        <td class="text-body">{{ f.drying_recommendation }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Rodapé do Card -->
+                        <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                            <span class="text-muted" style="font-size: 0.72rem;">
+                                Modelos: {{ f.compatible_printers | join(', ') }}
+                            </span>
+                            <a href="/chat?q={{ 'Como configurar e imprimir com ' + f.name }}" class="btn btn-sm btn-outline-success py-1 px-2" style="font-size: 0.75rem;">
+                                <i class="bi bi-robot me-1"></i> Dicas de Fatiamento
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </main>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterFilaments() {
+    const selectedPrinter = document.getElementById("printerFilter").value.toLowerCase();
+    const selectedCategory = document.getElementById("categoryFilter").value.toLowerCase();
+    const cards = document.querySelectorAll(".filament-card-item");
+
+    cards.forEach(card => {
+        const cardPrinters = card.getAttribute("data-printers").toLowerCase();
+        const cardCategory = card.getAttribute("data-category").toLowerCase();
+
+        const matchPrinter = selectedPrinter === "todos" || cardPrinters.includes(selectedPrinter);
+        const matchCategory = selectedCategory === "todos" || cardCategory === selectedCategory;
+
+        if (matchPrinter && matchCategory) {
+            card.classList.remove("d-none");
+        } else {
+            card.classList.add("d-none");
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block title %}Busca por "{{ query }}" — Wiki Bambu Lab{% endblock %}
+
+{% block main_content %}
+<div class="row g-4">
+
+    <!-- Barra Lateral Esquerda -->
+    <aside class="col-lg-3 d-none d-lg-block">
+        <div class="sidebar-sticky p-3 rounded-3 border bg-body shadow-xs">
+            {% include "sidebar_menu.html" %}
+        </div>
+    </aside>
+
+    <!-- Resultados da Busca -->
+    <main class="col-lg-9 col-md-12">
+        <div class="bg-body border rounded-4 p-4 p-md-5 shadow-xs">
+
+            <!-- Barra de Busca Superior na Página -->
+            <form action="/search" method="GET" class="mb-3">
+                <div class="input-group input-group-lg border rounded-3 overflow-hidden">
+                    <span class="input-group-text bg-body border-0 text-success">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control bg-body border-0" placeholder="Pesquisar por erro, modelo, procedimento..." autofocus>
+                    <button class="btn btn-success px-4" type="submit">Buscar</button>
+                </div>
+            </form>
+
+            <!-- Filtro Rápido por Modelo / Série -->
+            <div class="d-flex flex-wrap align-items-center gap-1.5 mb-4">
+                <span class="small text-muted me-1">Filtrar por Série:</span>
+                <a href="/search?q={{ query }}&series=todas" class="badge {% if not selected_series or selected_series == 'todas' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} text-decoration-none py-1.5 px-2.5 rounded-pill">Todas</a>
+                <a href="/search?q={{ query }}&series=x1" class="badge {% if selected_series == 'x1' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} text-decoration-none py-1.5 px-2.5 rounded-pill">Série X1</a>
+                <a href="/search?q={{ query }}&series=p1" class="badge {% if selected_series == 'p1' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} text-decoration-none py-1.5 px-2.5 rounded-pill">Série P1</a>
+                <a href="/search?q={{ query }}&series=a1" class="badge {% if selected_series == 'a1' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} text-decoration-none py-1.5 px-2.5 rounded-pill">Série A1</a>
+                <a href="/search?q={{ query }}&series=h2" class="badge {% if selected_series == 'h2' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} text-decoration-none py-1.5 px-2.5 rounded-pill">Série H2</a>
+                <a href="/search?q={{ query }}&series=ams" class="badge {% if selected_series == 'ams' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} text-decoration-none py-1.5 px-2.5 rounded-pill">AMS</a>
+                <a href="/search?q={{ query }}&series=software" class="badge {% if selected_series == 'software' %}bg-success text-white{% else %}bg-light text-muted border{% endif %} text-decoration-none py-1.5 px-2.5 rounded-pill">Software</a>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                <h1 class="h4 fw-bold mb-0">
+                    Resultados para <span class="text-success">"{{ query }}"</span>
+                </h1>
+                <span class="badge bg-light text-muted border">
+                    {{ total_results }} resultado(s) encontrado(s)
+                </span>
+            </div>
+
+            {% if results and results | length > 0 %}
+            <div class="d-flex flex-column gap-3">
+                {% for item in results %}
+                <div class="search-result-item p-3 border rounded-3 transition-all hover-shadow">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill text-uppercase" style="font-size: 0.7rem;">
+                            {{ item.section }}
+                        </span>
+                        {% if item.subsection %}
+                        <span class="badge bg-light text-muted border rounded-pill" style="font-size: 0.7rem;">
+                            {{ item.subsection }}
+                        </span>
+                        {% endif %}
+                        <span class="text-muted small ms-auto">{{ item.path }}</span>
+                    </div>
+
+                    <h2 class="h5 fw-bold mb-2">
+                        <a href="/wiki/{{ item.path }}" class="text-body text-decoration-none">
+                            {{ item.title }}
+                        </a>
+                    </h2>
+
+                    {% if item.snippet %}
+                    <p class="text-muted small mb-0 search-snippet">
+                        {{ item.snippet | safe }}
+                    </p>
+                    {% elif item.description %}
+                    <p class="text-muted small mb-0">
+                        {{ item.description }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+                <h3 class="h5 text-muted">Nenhum resultado encontrado para "{{ query }}"</h3>
+                <p class="text-muted small mb-4">Verifique a ortografia ou tente termos mais gerais (ex: <em>correia</em>, <em>nivelamento</em>, <em>hotend</em>, <em>ams</em>).</p>
+                <a href="/" class="btn btn-outline-success btn-sm">Voltar para a Página Inicial</a>
+            </div>
+            {% endif %}
+
+        </div>
+    </main>
+
+</div>
+{% endblock %}

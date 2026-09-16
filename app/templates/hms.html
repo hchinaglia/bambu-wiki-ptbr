@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+
+{% block title %}Decodificador de Códigos de Erro HMS — Wiki Bambu Lab{% endblock %}
+
+{% block main_content %}
+<div class="row g-4">
+
+    <!-- Barra Lateral Esquerda -->
+    <aside class="col-lg-3 d-none d-lg-block">
+        <div class="sidebar-sticky p-3 rounded-3 border bg-body shadow-xs">
+            {% include "sidebar_menu.html" %}
+        </div>
+    </aside>
+
+    <!-- Conteúdo Central: Decodificador HMS -->
+    <main class="col-lg-9 col-md-12">
+        <div class="bg-body border rounded-4 p-4 p-md-5 shadow-xs">
+
+            <!-- Cabeçalho -->
+            <div class="d-flex align-items-center gap-3 border-bottom pb-4 mb-4">
+                <div class="category-icon-box rounded-3 bg-danger-subtle text-danger p-3">
+                    <i class="bi bi-exclamation-octagon-fill fs-2"></i>
+                </div>
+                <div>
+                    <h1 class="h3 fw-bold mb-1">Decodificador de Códigos de Erro HMS</h1>
+                    <p class="text-muted small mb-0">
+                        O Health Management System (HMS) monitora a saúde dos sensores, motores e alimentação da sua Bambu Lab. Digite o código exibido na tela ou no app Bambu Handy para ver o diagnóstico imediato.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Campo de Busca de Código HMS -->
+            <div class="mb-4">
+                <div class="input-group input-group-lg border rounded-3 overflow-hidden shadow-xs">
+                    <span class="input-group-text bg-body border-0 text-danger">
+                        <i class="bi bi-upc-scan fs-5"></i>
+                    </span>
+                    <input type="text" id="hmsInput" class="form-control bg-body border-0" placeholder="Exemplo: 0300 0100 0001 0004 ou 0700 8000..." value="{{ query or '' }}" autofocus>
+                    <button class="btn btn-danger px-4 fw-semibold" type="button" onclick="filterHms()">Decodificar</button>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-2 small text-muted">
+                    <span>Exemplos frequentes:</span>
+                    <a href="javascript:void(0)" onclick="setHms('0300 0100 0001 0004')" class="badge bg-light text-muted border text-decoration-none">0300 0100 (Bico/Temperatura)</a>
+                    <a href="javascript:void(0)" onclick="setHms('0700 8000 0002 0001')" class="badge bg-light text-muted border text-decoration-none">0700 8000 (Alimentador AMS)</a>
+                    <a href="javascript:void(0)" onclick="setHms('0300 0300 0001 0001')" class="badge bg-light text-muted border text-decoration-none">0300 0300 (Falha Espaguete)</a>
+                    <a href="javascript:void(0)" onclick="setHms('0300 0a00 0001 0001')" class="badge bg-light text-muted border text-decoration-none">0300 0a00 (Ressonância XY)</a>
+                </div>
+            </div>
+
+            <!-- Lista de Códigos HMS -->
+            <div id="hmsResults" class="d-flex flex-column gap-3">
+                {% for item in hms_codes %}
+                <div class="hms-card p-4 border rounded-3 transition-all hover-shadow bg-body" data-code="{{ item.code }} {{ item.raw_code }} {{ item.title }} {{ item.module }}">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge font-monospace bg-dark text-white px-2.5 py-1.5" style="letter-spacing: 0.05em;">
+                                HMS {{ item.code }}
+                            </span>
+                            <span class="badge bg-light text-muted border">{{ item.module }}</span>
+                        </div>
+                        <span class="badge {% if item.severity == 'Alta' %}bg-danger-subtle text-danger border border-danger-subtle{% elif item.severity == 'Média' %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% else %}bg-info-subtle text-info border border-info-subtle{% endif %} rounded-pill px-2.5">
+                            Severidade: {{ item.severity }}
+                        </span>
+                    </div>
+
+                    <h2 class="h5 fw-bold text-body mb-2">{{ item.title }}</h2>
+                    <p class="text-muted small mb-3">{{ item.description }}</p>
+
+                    <div class="row g-3 small mb-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100 border">
+                                <strong class="text-danger d-block mb-1.5"><i class="bi bi-exclamation-circle me-1"></i> Causas Prováveis:</strong>
+                                <ul class="mb-0 ps-3">
+                                    {% for c in item.causes %}
+                                    <li class="mb-1 text-muted">{{ c }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-success-subtle rounded-3 h-100 border border-success-subtle">
+                                <strong class="text-success d-block mb-1.5"><i class="bi bi-wrench-adjustable me-1"></i> Procedimento de Reparo:</strong>
+                                <ol class="mb-0 ps-3">
+                                    {% for s in item.solution_steps %}
+                                    <li class="mb-1 text-dark">{{ s }}</li>
+                                    {% endfor %}
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <a href="/wiki/{{ item.wiki_path }}" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1">
+                            <i class="bi bi-book me-1"></i> Ler Procedimento Completo na Wiki
+                        </a>
+                        <a href="/chat" class="btn btn-sm btn-light border text-muted d-inline-flex align-items-center gap-1" onclick="localStorage.setItem('quick_prompt', 'Meu erro e HMS {{ item.code }}: {{ item.title }}');">
+                            <i class="bi bi-robot text-success me-1"></i> Tirar Dúvida com a IA
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Caso não encontre -->
+            <div id="noHms" class="text-center py-5 d-none">
+                <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+                <h3 class="h5 text-muted">Código HMS não encontrado na lista padrão</h3>
+                <p class="text-muted small mb-4">Você pode perguntar diretamente ao Assistente IA para decodificar esse código:</p>
+                <a href="/chat" id="askHmsBtn" class="btn btn-success px-4 rounded-pill">
+                    <i class="bi bi-robot me-1"></i> Decodificar com o Assistente IA
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterHms() {
+    const query = document.getElementById("hmsInput").value.trim().toLowerCase();
+    const cards = document.querySelectorAll(".hms-card");
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const text = card.getAttribute("data-code").toLowerCase();
+        if (!query || text.includes(query)) {
+            card.classList.remove("d-none");
+            visibleCount++;
+        } else {
+            card.classList.add("d-none");
+        }
+    });
+
+    const noHms = document.getElementById("noHms");
+    if (visibleCount === 0) {
+        noHms.classList.remove("d-none");
+        document.getElementById("askHmsBtn").href = `/chat?q=${encodeURIComponent('O que significa o código de erro HMS ' + query + ' na Bambu Lab?')}`;
+    } else {
+        noHms.classList.add("d-none");
+    }
+}
+
+function setHms(code) {
+    document.getElementById("hmsInput").value = code;
+    filterHms();
+}
+
+document.getElementById("hmsInput").addEventListener("input", filterHms);
+</script>
+{% endblock %}

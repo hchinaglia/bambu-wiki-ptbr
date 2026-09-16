@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Wiki Bambu Lab Brasil{% endblock %} | Documentação Oficial em PT-BR</title>
+    <meta name="description" content="{% block description %}Guia completo de impressoras 3D, AMS, fatiador Bambu Studio, manutenção e solução de problemas da Bambu Lab em Português.{% endblock %}">
+    
+    <!-- Bootstrap 5 CSS & Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Marked.js para renderização de Markdown no cliente -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header class="navbar navbar-expand-lg sticky-top custom-navbar">
+        <div class="container-fluid px-lg-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <span class="brand-badge">Bambu Lab</span>
+                <span class="brand-title">Wiki</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 ms-1">PT-BR</span>
+            </a>
+
+            <!-- Barra de Busca Global -->
+            <div class="search-container mx-auto position-relative d-none d-md-block">
+                <form action="/search" method="GET" class="search-form">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0 text-muted">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" id="globalSearchInput" name="q" class="form-control border-start-0 ps-0" placeholder="Buscar guias, erros, manutenção, modelos... (Ctrl+K)" autocomplete="off">
+                        <span class="input-group-text bg-transparent text-muted kbd-shortcut">
+                            <kbd>/</kbd>
+                        </span>
+                    </div>
+                </form>
+                <!-- Dropdown de autocomplete ao vivo -->
+                <div id="searchDropdown" class="search-results-dropdown shadow-lg d-none"></div>
+            </div>
+
+            <!-- Navegação Superior & Ações -->
+            <div class="d-flex align-items-center gap-3">
+                <a href="/" class="nav-link d-none d-lg-block">Início</a>
+                <a href="/wiki/x1" class="nav-link d-none d-lg-block">Série X</a>
+                <a href="/wiki/p1" class="nav-link d-none d-lg-block">Série P</a>
+                <a href="/wiki/a1" class="nav-link d-none d-lg-block">Série A</a>
+                <a href="/wiki/ams" class="nav-link d-none d-lg-block">AMS</a>
+                <a href="/hms" class="nav-link d-none d-xl-block" title="Decodificador de Erros HMS">
+                    <i class="bi bi-upc-scan text-danger me-1"></i> HMS
+                </a>
+                <a href="/filamentos" class="nav-link d-none d-xl-block" title="Tabela de Filamentos">
+                    <i class="bi bi-layers text-success me-1"></i> Filamentos
+                </a>
+
+                <!-- Dropdown de Favoritos -->
+                <div class="dropdown d-none d-md-block">
+                    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" id="bookmarksDropdownBtn" title="Manuais Salvos">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        <span class="d-none d-lg-inline small">Favoritos</span>
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill small" id="bookmarksBadge">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-lg p-2" id="bookmarksMenu" style="width: 320px; max-height: 380px; overflow-y: auto;">
+                        <span class="dropdown-header small text-uppercase">Manuais Marcados</span>
+                        <div id="bookmarksList" class="small text-muted p-2 text-center">Nenhum manual salvo ainda.</div>
+                    </div>
+                </div>
+
+                <!-- Botão do Assistente IA (Abre Gaveta Lateral) -->
+                <button class="btn btn-sm btn-success d-flex align-items-center gap-1.5 fw-semibold px-2.5 shadow-xs border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiChatDrawer">
+                    <i class="bi bi-robot"></i> <span class="d-none d-sm-inline">Assistente IA</span>
+                </button>
+
+                <button class="btn btn-sm btn-outline-secondary theme-toggle-btn" id="themeToggle" title="Alternar tema claro/escuro">
+                    <i class="bi bi-moon-stars" id="themeIcon"></i>
+                </button>
+
+                <a href="https://wiki.bambulab.com/" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success d-none d-sm-inline-flex align-items-center gap-1">
+                    <i class="bi bi-box-arrow-up-right"></i> Wiki Oficial
+                </a>
+
+                <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container-fluid px-lg-4 my-4">
+        {% block main_content %}{% endblock %}
+    </div>
+
+    <!-- Offcanvas Mobile Sidebar -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOffcanvas">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title">Navegação da Wiki</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <!-- Busca Mobile -->
+            <form action="/search" method="GET" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar na Wiki...">
+                    <button class="btn btn-success" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+            {% include "sidebar_menu.html" %}
+        </div>
+    </div>
+
+    <!-- Botão Flutuante de Assistente IA (Abre Gaveta Lateral) -->
+    <div class="position-fixed bottom-0 end-0 p-3 p-md-4" style="z-index: 1040;">
+        <button type="button" class="btn btn-success shadow-lg rounded-pill px-3 py-2.5 d-flex align-items-center gap-2 border-0 transition-all hover-shadow" data-bs-toggle="offcanvas" data-bs-target="#aiChatDrawer" title="Perguntar ao Assistente IA">
+            <i class="bi bi-robot fs-5"></i>
+            <span class="fw-semibold small d-none d-sm-inline">Perguntar à IA</span>
+            <span class="badge bg-white text-success rounded-pill small" style="font-size: 0.65rem;">Gemini</span>
+        </button>
+    </div>
+
+    <!-- Gaveta Lateral de Chat com o Assistente IA (Offcanvas Drawer) -->
+    <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="aiChatDrawer" style="width: 480px; max-width: 95vw;">
+        <div class="offcanvas-header border-bottom py-2.5 px-3 bg-body">
+            <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle bg-success text-white p-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div>
+                    <h6 class="offcanvas-title fw-bold mb-0" style="font-size: 0.95rem;">Assistente IA Bambu Lab</h6>
+                    <span class="text-muted small" style="font-size: 0.72rem;">RAG sobre 2.486 artigos técnicos</span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+                <a href="/chat" class="btn btn-sm btn-light border text-muted px-2 py-1" title="Abrir em tela cheia">
+                    <i class="bi bi-arrows-fullscreen" style="font-size: 0.75rem;"></i>
+                </a>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+            </div>
+        </div>
+        
+        <!-- Seletor de Modelo no Topo da Gaveta -->
+        <div class="p-2 border-bottom bg-light d-flex align-items-center justify-content-between gap-2">
+            <span class="small text-muted fw-semibold" style="font-size: 0.75rem;">Modelo:</span>
+            <select id="drawerModelSelect" class="form-select form-select-sm border-0 bg-white shadow-xs" style="font-size: 0.8rem;">
+                <option value="auto" selected>🤖 Automático (Recomendado)</option>
+                <option value="gemini-3.8-flash">⚡ gemini-3.8-flash</option>
+                <option value="gemini-3.7-flash">⚡ gemini-3.7-flash</option>
+                <option value="gemini-3.6-flash">⚡ gemini-3.6-flash</option>
+                <option value="gemini-3.5-flash">⚡ gemini-3.5-flash</option>
+                <option value="gemini-3.5-flash-lite">⚡ gemini-3.5-flash-lite</option>
+                <option value="gemini-3.1-flash-lite">⚡ gemini-3.1-flash-lite</option>
+            </select>
+        </div>
+
+        <!-- Área de Mensagens da Gaveta -->
+        <div class="offcanvas-body p-3 d-flex flex-column" id="drawerMessages" style="background-color: var(--bg-body); overflow-y: auto; font-size: 0.9rem;">
+            <div class="chat-message bot-message d-flex gap-2.5 mb-3">
+                <div class="avatar rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 30px; height: 30px; font-size: 0.85rem;">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div class="message-content bg-body border rounded-3 p-2.5 shadow-xs" style="max-width: 88%;">
+                    <p class="mb-1 fw-semibold">Olá! Como posso ajudar?</p>
+                    <p class="mb-1 text-muted small">Tire dúvidas sobre sua impressora, manutenção ou anexe uma foto com a câmera para diagnóstico com Gemini Vision.</p>
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        <button class="btn btn-xs btn-outline-secondary py-0.5 px-2" style="font-size: 0.72rem;" onclick="sendDrawerPrompt('Como calibrar a primeira camada?')">🥞 Primeira camada</button>
+                        <button class="btn btn-xs btn-outline-secondary py-0.5 px-2" style="font-size: 0.72rem;" onclick="sendDrawerPrompt('Como desentupir o bico da impressora?')">🔧 Desentupir bico</button>
+                        <button class="btn btn-xs btn-outline-secondary py-0.5 px-2" style="font-size: 0.72rem;" onclick="sendDrawerPrompt('O que fazer com o erro de espaguete/cabeleira?')">🍝 Erro de espaguete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pré-visualização de Imagem Anexada -->
+        <div id="drawerImagePreview" class="px-3 py-1.5 border-top bg-light d-none align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <img id="drawerPreviewImg" src="" alt="Preview" style="max-height: 40px; border-radius: 4px; border: 1px solid var(--border-color);">
+                <span class="small text-muted text-truncate" style="max-width: 250px;" id="drawerImageName">foto.png</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="clearDrawerImage()"><i class="bi bi-x-circle-fill"></i></button>
+        </div>
+
+        <!-- Caixa de Entrada da Gaveta -->
+        <div class="p-2.5 border-top bg-body">
+            <form id="drawerChatForm" onsubmit="handleDrawerChatSubmit(event)">
+                <div class="input-group">
+                    <label class="input-group-text bg-light text-muted border-end-0 cursor-pointer" for="drawerImageInput" title="Anexar foto para diagnóstico com Gemini Vision">
+                        <i class="bi bi-camera fs-6"></i>
+                        <input type="file" id="drawerImageInput" accept="image/png, image/jpeg, image/webp" class="d-none" onchange="handleDrawerImageUpload(event)">
+                    </label>
+                    <input type="text" id="drawerChatInput" class="form-control border-start-0 ps-1" placeholder="Faça uma pergunta ou anexe foto..." autocomplete="off">
+                    <button type="submit" id="drawerSendBtn" class="btn btn-success px-3">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="custom-footer mt-5 py-4 border-top">
+        <div class="container-fluid px-lg-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <div class="text-muted small">
+                © 2026 Wiki Bambu Lab Brasil — Documentação e Guias Técnicos em Português (PT-BR).
+            </div>
+            <div class="d-flex align-items-center gap-3 text-muted small">
+                <span>Baseado no ecossistema <a href="https://bambulab.com" target="_blank" rel="noopener" class="text-success text-decoration-none">Bambu Lab</a></span>
+                <span>•</span>
+                <a href="https://wiki.bambulab.com/sitemap.xml" target="_blank" rel="noopener" class="text-muted text-decoration-none">Sitemap Oficial</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

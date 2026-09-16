@@ -1,0 +1,25 @@
+<!-- Menu hierárquico lateral -->
+<div class="wiki-sidebar-nav">
+    {% for group_name, items in nav_tree.items() %}
+    <div class="nav-group mb-3">
+        <div class="nav-group-header text-uppercase text-muted fw-bold small px-2 mb-1">
+            {{ group_name }}
+        </div>
+        <ul class="nav flex-column nav-pills">
+            {% for item in items %}
+            <li class="nav-item">
+                <a href="{{ item.url }}" class="nav-link d-flex align-items-center justify-content-between px-2 py-1.5 rounded {% if active_path and active_path.startswith(item.id) %}active{% endif %}">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi {{ item.icon }} text-success"></i>
+                        <span>{{ item.name }}</span>
+                    </span>
+                    {% if item.count > 0 %}
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill small">{{ item.count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+</div>

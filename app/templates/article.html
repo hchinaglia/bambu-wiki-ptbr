@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ article.title }} — Wiki Bambu Lab{% endblock %}
+{% block description %}{{ article.description }}{% endblock %}
+
+{% block main_content %}
+<div class="row g-4">
+
+    <!-- Barra Lateral Esquerda (Desktop) -->
+    <aside class="col-lg-3 d-none d-lg-block">
+        <div class="sidebar-sticky p-3 rounded-3 border bg-body shadow-xs">
+            {% include "sidebar_menu.html" %}
+        </div>
+    </aside>
+
+    <!-- Conteúdo Central do Artigo -->
+    <main class="col-lg-6 col-md-12">
+        <article class="article-container bg-body border rounded-4 p-4 p-md-5 shadow-xs">
+
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb small">
+                    {% for crumb in breadcrumbs %}
+                        {% if crumb.url %}
+                            <li class="breadcrumb-item"><a href="{{ crumb.url }}" class="text-decoration-none text-muted">{{ crumb.name }}</a></li>
+                        {% else %}
+                            <li class="breadcrumb-item active text-truncate" aria-current="page">{{ crumb.name }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ol>
+            </nav>
+
+            <!-- Título & Metadados -->
+            <header class="article-header border-bottom pb-4 mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill small">
+                        <i class="bi bi-shield-check me-1"></i> Documentação Técnica
+                    </span>
+                    <span class="badge bg-light text-muted border px-2 py-1 rounded-pill small">
+                        {{ article.section | upper }}
+                    </span>
+                </div>
+                <h1 class="h2 fw-bold mb-3 article-title">{{ article.title }}</h1>
+                {% if article.description %}
+                    <p class="lead text-muted fs-6 mb-3">{{ article.description }}</p>
+                {% endif %}
+
+                <div class="d-flex flex-wrap align-items-center gap-3 text-muted small">
+                    <span><i class="bi bi-person me-1"></i> {{ article.author or "Bambu Lab" }}</span>
+                    <span>•</span>
+                    <span><i class="bi bi-calendar3 me-1"></i> Atualizado em {{ article.updated_at[:10] if article.updated_at else "Recente" }}</span>
+                    <span>•</span>
+                    <a href="{{ article.original_url }}" target="_blank" rel="noopener" class="text-muted text-decoration-none">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Ver no site original
+                    </a>
+                </div>
+            </header>
+
+            <!-- Sumário em telas móveis/pequenas -->
+            {% if article.toc and article.toc | length > 0 %}
+            <div class="d-lg-none mb-4 p-3 bg-light rounded-3 border">
+                <div class="fw-bold small mb-2 text-uppercase text-muted">
+                    <i class="bi bi-list-nested me-1"></i> Nesta Página
+                </div>
+                <ul class="list-unstyled mb-0 small">
+                    {% for item in article.toc %}
+                    <li class="mb-1">
+                        <a href="{{ item.anchor }}" class="text-decoration-none text-success">{{ item.title }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Corpo do Artigo -->
+            <div class="article-body">
+                {{ article.html_content | safe }}
+            </div>
+
+            <!-- Rodapé do Artigo -->
+            <footer class="article-footer border-top pt-4 mt-5 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <a href="/wiki/{{ article.section }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Mais guias de {{ section_info.name }}
+                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-warning btn-sm d-flex align-items-center gap-1" id="bookmarkBtn" data-path="{{ article.path }}" data-title="{{ article.title }}" data-section="{{ article.section }}">
+                        <i class="bi bi-star" id="bookmarkIcon"></i> <span id="bookmarkText">Favoritar</span>
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> Imprimir
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" id="copyUrlBtn">
+                        <i class="bi bi-link-45deg me-1"></i> Compartilhar
+                    </button>
+                </div>
+            </footer>
+
+        </article>
+    </main>
+
+    <!-- Barra Lateral Direita: Sumário da Página (TOC) -->
+    <aside class="col-lg-3 d-none d-lg-block">
+        <div class="toc-sticky p-3 rounded-3 border bg-body shadow-xs">
+            <div class="d-flex align-items-center gap-2 fw-semibold text-uppercase small text-muted mb-3">
+                <i class="bi bi-list-task text-success"></i>
+                <span>Nesta Página</span>
+            </div>
+            {% if article.toc and article.toc | length > 0 %}
+            <nav id="tocNav" class="toc-nav">
+                <ul class="nav flex-column small">
+                    {% for item in article.toc %}
+                    <li class="nav-item mb-1.5">
+                        <a href="{{ item.anchor }}" class="nav-link px-2 py-1 text-muted rounded text-truncate toc-link" title="{{ item.title }}">
+                            {{ item.title }}
+                        </a>
+                        {% if item.children %}
+                        <ul class="nav flex-column ms-3 mt-1">
+                            {% for child in item.children %}
+                            <li class="nav-item mb-1">
+                                <a href="{{ child.anchor }}" class="nav-link px-2 py-0.5 text-muted rounded text-truncate toc-link" title="{{ child.title }}">
+                                    {{ child.title }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+            {% else %}
+            <p class="text-muted small mb-0">Artigo em seção única.</p>
+            {% endif %}
+
+            <hr class="my-3">
+            <div class="d-grid gap-2">
+                <a href="{{ article.original_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-light border text-muted">
+                    <i class="bi bi-globe me-1"></i> Abrir na Wiki Oficial
+                </a>
+            </div>
+        </div>
+    </aside>
+
+</div>
+{% endblock %}
