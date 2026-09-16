@@ -113,6 +113,9 @@ def get_navigation_tree():
 
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/api/index.py", response_class=HTMLResponse)
+@app.get("/api/index", response_class=HTMLResponse)
+@app.get("/api", response_class=HTMLResponse)
 async def home(request: Request):
     """Página inicial no mesmo estilo da Home da Bambu Lab."""
     with get_connection(DB_FILE) as conn:
