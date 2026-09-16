@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <!-- Custom Style -->
-    <link rel="stylesheet" href="/static/css/style.css?v=20260916_05">
+    <link rel="stylesheet" href="/static/css/style.css?v=20260916_06">
     <!-- Marked.js para renderização de Markdown no cliente -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     {% block head %}{% endblock %}
@@ -48,7 +48,7 @@
             </div>
 
             <!-- Navegação Superior & Ações -->
-            <div class="d-flex align-items-center gap-2 gap-xl-2.5">
+            <div class="d-flex align-items-center gap-1.5 gap-xl-2">
                 <!-- Dropdown Modelos / Séries -->
                 <div class="dropdown d-none d-lg-block">
                     <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -86,7 +86,9 @@
 
                 <!-- Detector de Cores & Preços -->
                 <a href="/cores" class="nav-link d-none d-lg-inline-flex" title="Detector de Cores & Comparador de Filamentos">
-                    <i class="bi bi-palette-fill text-warning"></i> Cores & Preços
+                    <i class="bi bi-palette-fill text-warning"></i>
+                    <span class="d-none d-xl-inline">Cores & Preços</span>
+                    <span class="d-inline d-xl-none">Cores</span>
                 </a>
 
                 <!-- Links diretos em telas ultra-largas (xxl >= 1400px) -->
@@ -137,7 +139,9 @@
 
                 <!-- Botão do Assistente IA (Abre Gaveta Lateral) -->
                 <button class="btn btn-sm btn-success d-flex align-items-center gap-1.5 fw-semibold px-2.5 shadow-xs border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiChatDrawer">
-                    <i class="bi bi-robot"></i> <span class="d-none d-sm-inline">Assistente IA</span>
+                    <i class="bi bi-robot"></i>
+                    <span class="d-none d-xl-inline">Assistente IA</span>
+                    <span class="d-inline d-xl-none">Chat IA</span>
                 </button>
 
                 <!-- Alternar Tema -->

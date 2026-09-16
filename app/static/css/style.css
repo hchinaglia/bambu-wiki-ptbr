@@ -65,8 +65,8 @@ body {
 /* Search Box */
 .search-container {
     width: 100%;
-    min-width: 140px;
-    max-width: 220px;
+    min-width: 120px;
+    max-width: 175px;
     flex-shrink: 1;
 }
 
