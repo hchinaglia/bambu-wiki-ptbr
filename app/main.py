@@ -162,13 +162,17 @@ async def home(request: Request):
 
     nav_tree = get_navigation_tree()
 
-    return templates.TemplateResponse("home.html", {
-        "request": request,
-        "total_articles": total_articles,
-        "recent_articles": recent_articles,
-        "nav_tree": nav_tree,
-        "section_config": SECTION_CONFIG,
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="home.html",
+        context={
+            "request": request,
+            "total_articles": total_articles,
+            "recent_articles": recent_articles,
+            "nav_tree": nav_tree,
+            "section_config": SECTION_CONFIG,
+        }
+    )
 
 
 @app.get("/wiki/{path:path}", response_class=HTMLResponse)
@@ -181,14 +185,18 @@ async def read_article(request: Request, path: str):
     if not article and clean_path in SECTION_CONFIG:
         section_articles = get_articles_by_section(clean_path, DB_FILE)
         section_info = SECTION_CONFIG.get(clean_path, {"name": clean_path.upper(), "icon": "bi-folder"})
-        return templates.TemplateResponse("section.html", {
-            "request": request,
-            "section_id": clean_path,
-            "section_info": section_info,
-            "articles": section_articles,
-            "nav_tree": get_navigation_tree(),
-            "active_path": clean_path
-        })
+        return templates.TemplateResponse(
+            request=request,
+            name="section.html",
+            context={
+                "request": request,
+                "section_id": clean_path,
+                "section_info": section_info,
+                "articles": section_articles,
+                "nav_tree": get_navigation_tree(),
+                "active_path": clean_path
+            }
+        )
 
     if not article:
         # Tenta buscar por slug aproximado
@@ -214,14 +222,18 @@ async def read_article(request: Request, path: str):
         breadcrumbs.append({"name": section_title, "url": f"/wiki/{accumulated}"})
     breadcrumbs.append({"name": article["title"], "url": None})
 
-    return templates.TemplateResponse("article.html", {
-        "request": request,
-        "article": article,
-        "breadcrumbs": breadcrumbs,
-        "nav_tree": nav_tree,
-        "active_path": article["path"],
-        "section_info": SECTION_CONFIG.get(article["section"], {"name": article["section"].upper(), "icon": "bi-file-text"}),
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="article.html",
+        context={
+            "request": request,
+            "article": article,
+            "breadcrumbs": breadcrumbs,
+            "nav_tree": nav_tree,
+            "active_path": article["path"],
+            "section_info": SECTION_CONFIG.get(article["section"], {"name": article["section"].upper(), "icon": "bi-file-text"}),
+        }
+    )
 
 
 @app.get("/search", response_class=HTMLResponse)
@@ -236,28 +248,36 @@ async def search_page(request: Request, q: str = Query("", alias="q"), series: O
     else:
         results = raw_results
 
-    return templates.TemplateResponse("search.html", {
-        "request": request,
-        "query": q,
-        "selected_series": series or "todas",
-        "results": results,
-        "total_results": len(results),
-        "nav_tree": get_navigation_tree(),
-        "active_path": ""
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="search.html",
+        context={
+            "request": request,
+            "query": q,
+            "selected_series": series or "todas",
+            "results": results,
+            "total_results": len(results),
+            "nav_tree": get_navigation_tree(),
+            "active_path": ""
+        }
+    )
 
 
 @app.get("/hms", response_class=HTMLResponse)
 async def hms_page(request: Request, q: str = Query("", alias="q")):
     """Página de decodificação de códigos de erro HMS da Bambu Lab."""
     codes = search_hms_codes(q)
-    return templates.TemplateResponse("hms.html", {
-        "request": request,
-        "query": q,
-        "hms_codes": codes,
-        "nav_tree": get_navigation_tree(),
-        "active_path": "hms"
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="hms.html",
+        context={
+            "request": request,
+            "query": q,
+            "hms_codes": codes,
+            "nav_tree": get_navigation_tree(),
+            "active_path": "hms"
+        }
+    )
 
 
 @app.get("/api/hms")
@@ -270,14 +290,18 @@ async def api_hms(q: str = Query("")):
 async def filaments_page(request: Request, printer: Optional[str] = None, category: Optional[str] = None):
     """Página do Guia Interativo de Filamentos e Temperaturas."""
     filaments = get_filaments(printer=printer, category=category)
-    return templates.TemplateResponse("filaments.html", {
-        "request": request,
-        "filaments": filaments,
-        "selected_printer": printer or "Todos",
-        "selected_category": category or "Todos",
-        "nav_tree": get_navigation_tree(),
-        "active_path": "filamentos"
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="filaments.html",
+        context={
+            "request": request,
+            "filaments": filaments,
+            "selected_printer": printer or "Todos",
+            "selected_category": category or "Todos",
+            "nav_tree": get_navigation_tree(),
+            "active_path": "filamentos"
+        }
+    )
 
 
 @app.get("/api/filamentos")
@@ -319,12 +343,16 @@ async def api_stats():
 @app.get("/chat", response_class=HTMLResponse)
 async def chat_page(request: Request):
     """Página dedicada do assistente de inteligência artificial da Wiki."""
-    return templates.TemplateResponse("chat.html", {
-        "request": request,
-        "supported_models": SUPPORTED_MODELS,
-        "nav_tree": get_navigation_tree(),
-        "active_path": "chat"
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="chat.html",
+        context={
+            "request": request,
+            "supported_models": SUPPORTED_MODELS,
+            "nav_tree": get_navigation_tree(),
+            "active_path": "chat"
+        }
+    )
 
 
 @app.post("/api/chat")
