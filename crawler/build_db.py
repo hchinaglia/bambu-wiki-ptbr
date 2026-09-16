@@ -38,19 +38,43 @@ DB_LOCK = threading.Lock()
 def get_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
     """Retorna uma conexão com SQLite tolerante a ambientes locais e serverless (Vercel)."""
     actual_path = resolve_db_path(db_path)
-    try:
-        conn = sqlite3.connect(actual_path, timeout=60.0)
+
+    # Detecta se estamos em ambiente serverless/read-only como Vercel ou AWS Lambda
+    is_serverless = (
+        os.environ.get("VERCEL") == "1"
+        or os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
+        or "/var/task" in actual_path
+        or not os.access(actual_path, os.W_OK)
+        or not os.access(os.path.dirname(actual_path) or ".", os.W_OK)
+    )
+
+    if is_serverless:
+        conn = sqlite3.connect(f"file:{actual_path}?mode=ro", uri=True, timeout=60.0)
         conn.row_factory = sqlite3.Row
         try:
-            conn.execute("PRAGMA journal_mode=WAL;")
-            conn.execute("PRAGMA busy_timeout=60000;")
+            conn.execute("PRAGMA query_only = ON;")
         except Exception:
             pass
         return conn
+
+    try:
+        conn = sqlite3.connect(actual_path, timeout=60.0)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA busy_timeout=60000;")
+        try:
+            conn.execute("PRAGMA journal_mode=WAL;")
+        except Exception:
+            pass
+        conn.execute("SELECT 1;").fetchone()
+        return conn
     except Exception:
-        # Fallback para modo estritamente leitura (read-only) em lambdas
+        # Fallback definitivo para modo estritamente leitura (read-only)
         conn = sqlite3.connect(f"file:{actual_path}?mode=ro", uri=True, timeout=60.0)
         conn.row_factory = sqlite3.Row
+        try:
+            conn.execute("PRAGMA query_only = ON;")
+        except Exception:
+            pass
         return conn
 
 

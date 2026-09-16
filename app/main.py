@@ -29,8 +29,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Inicializa banco de dados apenas se não estiver no Vercel (onde o FS é read-only)
-if os.environ.get("VERCEL") != "1":
+# Inicializa banco de dados apenas em ambiente com permissão de escrita
+is_serverless_env = (
+    os.environ.get("VERCEL") == "1"
+    or os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
+    or not os.access(os.path.dirname(DB_FILE) or ".", os.W_OK)
+)
+if not is_serverless_env:
     try:
         init_db(DB_FILE)
     except Exception:
