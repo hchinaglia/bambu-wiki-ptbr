@@ -41,22 +41,48 @@
         </div>
     </section>
 
-    <!-- Banner Destaque Assistente IA -->
-    <div class="card border-0 bg-success-subtle border border-success-subtle rounded-4 p-3.5 mb-5 shadow-xs">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-success text-white p-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
-                    <i class="bi bi-robot fs-4"></i>
-                </div>
-                <div>
-                    <h3 class="h6 fw-bold mb-1 text-success-emphasis">Dúvidas sobre manutenção, calibração ou códigos de erro?</h3>
-                    <p class="text-muted small mb-0">O <strong>Assistente IA</strong> pesquisa em tempo real nos 2.486 artigos da Wiki e responde com base na documentação oficial utilizando os modelos Gemini Flash.</p>
+    <!-- Grid de Ferramentas Maker Rápidas -->
+    <div class="row g-3 mb-5">
+        <!-- Calculadora Bambu Studio -->
+        <div class="col-md-6">
+            <div class="card border-0 bg-info-subtle border border-info-subtle rounded-4 p-3.5 shadow-xs h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-info text-white p-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
+                        <i class="bi bi-sliders fs-4"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="h6 fw-bold mb-0 text-info-emphasis">Calculadora Bambu Studio</h3>
+                            <span class="badge bg-info text-white rounded-pill small" style="font-size: 0.65rem;">NOVO</span>
+                        </div>
+                        <p class="text-muted small mb-2">Descubra as configurações ideais de fatiamento (paredes, infill, velocidade, bico e mesa) para sua peça.</p>
+                        <a href="/calculadora" class="btn btn-sm btn-info text-white fw-semibold rounded-pill px-3 shadow-xs">
+                            Abrir Calculadora <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
-            <a href="/chat" class="btn btn-success fw-semibold px-4 py-2 rounded-pill d-inline-flex align-items-center gap-2 text-nowrap shadow-xs">
-                <span>Perguntar à IA</span>
-                <i class="bi bi-arrow-right"></i>
-            </a>
+        </div>
+
+        <!-- Assistente Especialista IA -->
+        <div class="col-md-6">
+            <div class="card border-0 bg-success-subtle border border-success-subtle rounded-4 p-3.5 shadow-xs h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success text-white p-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
+                        <i class="bi bi-robot fs-4"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="h6 fw-bold mb-0 text-success-emphasis">Assistente Especialista IA</h3>
+                            <span class="badge bg-success text-white rounded-pill small" style="font-size: 0.65rem;">Gemini</span>
+                        </div>
+                        <p class="text-muted small mb-2">Pesquisa em tempo real nos 2.486 manuais e analisa fotos de falhas para diagnóstico técnico.</p>
+                        <a href="/chat" class="btn btn-sm btn-success fw-semibold rounded-pill px-3 shadow-xs">
+                            Conversar com a IA <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -155,17 +181,17 @@
 
             <!-- Solução de Problemas -->
             <div class="col-md-6 col-lg-3">
-                <a href="/wiki/general" class="card category-card h-100 text-decoration-none border-0 shadow-sm rounded-4 p-3 transition-all">
+                <a href="/hms" class="card category-card h-100 text-decoration-none border-0 shadow-sm rounded-4 p-3 transition-all">
                     <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="category-icon-box rounded-3 bg-secondary-subtle text-secondary p-3">
-                            <i class="bi bi-exclamation-triangle fs-3"></i>
+                        <div class="category-icon-box rounded-3 bg-danger-subtle text-danger p-3">
+                            <i class="bi bi-upc-scan fs-3"></i>
                         </div>
                         <div>
                             <h3 class="h6 fw-bold mb-0 text-body">Troubleshooting</h3>
                             <span class="text-muted small">Erros & Códigos HMS</span>
                         </div>
                     </div>
-                    <p class="text-muted small mb-0">Diagnósticos rápidos para descolamento, entupimento de bico e falhas de impressão.</p>
+                    <p class="text-muted small mb-0">Decodificador oficial para falhas de aquecedor, atolamento AMS e códigos HMS.</p>
                 </a>
             </div>
 
@@ -187,7 +213,7 @@
 
             <!-- Guia de Filamentos -->
             <div class="col-md-6 col-lg-3">
-                <a href="/wiki/general" class="card category-card h-100 text-decoration-none border-0 shadow-sm rounded-4 p-3 transition-all">
+                <a href="/filamentos" class="card category-card h-100 text-decoration-none border-0 shadow-sm rounded-4 p-3 transition-all">
                     <div class="d-flex align-items-center gap-3 mb-3">
                         <div class="category-icon-box rounded-3 bg-dark-subtle text-dark p-3">
                             <i class="bi bi-layers fs-3"></i>

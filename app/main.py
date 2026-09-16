@@ -22,6 +22,7 @@ from app.agent import ask_agent, stream_agent_response
 from app.config import SUPPORTED_MODELS
 from app.hms_data import HMS_DATABASE, search_hms_codes
 from app.filament_data import FILAMENT_DATABASE, get_filaments
+from app.studio_calculator import calculate_slicing_profile
 
 app = FastAPI(
     title="Wiki Bambu Lab PT-BR",
@@ -308,6 +309,45 @@ async def filaments_page(request: Request, printer: Optional[str] = None, catego
 async def api_filaments(printer: Optional[str] = None, category: Optional[str] = None):
     """Endpoint JSON da tabela de filamentos."""
     return JSONResponse(get_filaments(printer=printer, category=category))
+
+
+@app.get("/calculadora", response_class=HTMLResponse)
+async def calculator_page(request: Request):
+    """Página da Calculadora e Otimizador de Configurações para Bambu Studio."""
+    return templates.TemplateResponse(
+        request=request,
+        name="calculator.html",
+        context={
+            "request": request,
+            "nav_tree": get_navigation_tree(),
+            "active_path": "calculadora"
+        }
+    )
+
+
+@app.get("/api/calculadora")
+async def api_calculator(
+    printer: str = Query("p1s"),
+    nozzle_size: float = Query(0.4),
+    nozzle_material: str = Query("hardened"),
+    filament: str = Query("pla-basic"),
+    objective: str = Query("balanced"),
+    plate: str = Query("textured_pei"),
+    enable_support: bool = Query(False),
+    support_type: str = Query("tree"),
+):
+    """Endpoint JSON da API para cálculo instantâneo de parâmetros do Bambu Studio."""
+    profile = calculate_slicing_profile(
+        printer_id=printer,
+        nozzle_size=nozzle_size,
+        nozzle_material=nozzle_material,
+        filament_id=filament,
+        objective_id=objective,
+        plate_id=plate,
+        enable_support=enable_support,
+        support_type=support_type,
+    )
+    return JSONResponse(profile)
 
 
 @app.get("/api/search")
