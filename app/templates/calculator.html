@@ -98,8 +98,8 @@
                     <form id="calcForm" onsubmit="return false;">
                         <!-- Impressora -->
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary mb-1.5 d-flex align-items-center gap-1.5" for="calcPrinter">
-                                <i class="bi bi-printer text-success"></i>
+                            <label class="form-label small fw-bold text-secondary mb-2 d-flex align-items-center" for="calcPrinter">
+                                <i class="bi bi-printer text-success fs-6 me-2"></i>
                                 <span>Modelo da Impressora:</span>
                             </label>
                             <select class="form-select border rounded-3 py-2 px-3" id="calcPrinter" style="font-size: 0.88rem;">
@@ -115,11 +115,11 @@
                         <!-- Bico: Tamanho e Material -->
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <label class="form-label small fw-bold text-secondary mb-1.5 d-flex align-items-center gap-1.5" for="calcNozzleSize">
-                                    <i class="bi bi-record-circle text-primary"></i>
+                                <label class="form-label small fw-bold text-secondary mb-2 d-flex align-items-center" for="calcNozzleSize">
+                                    <i class="bi bi-record-circle text-primary fs-6 me-2"></i>
                                     <span>Diâmetro Bico:</span>
                                 </label>
-                                <select class="form-select border rounded-3 py-2 px-2.5" id="calcNozzleSize" style="font-size: 0.88rem;">
+                                <select class="form-select border rounded-3 py-2 px-3" id="calcNozzleSize" style="font-size: 0.88rem;">
                                     <option value="0.2">0.2 mm (Fino)</option>
                                     <option value="0.4" selected>0.4 mm (Padrão)</option>
                                     <option value="0.6">0.6 mm (Rápido)</option>
@@ -127,11 +127,11 @@
                                 </select>
                             </div>
                             <div class="col-6">
-                                <label class="form-label small fw-bold text-secondary mb-1.5 d-flex align-items-center gap-1.5" for="calcNozzleMat">
-                                    <i class="bi bi-shield-shaded text-secondary"></i>
+                                <label class="form-label small fw-bold text-secondary mb-2 d-flex align-items-center" for="calcNozzleMat">
+                                    <i class="bi bi-shield-shaded text-secondary fs-6 me-2"></i>
                                     <span>Tipo Hotend:</span>
                                 </label>
-                                <select class="form-select border rounded-3 py-2 px-2.5" id="calcNozzleMat" style="font-size: 0.88rem;">
+                                <select class="form-select border rounded-3 py-2 px-3" id="calcNozzleMat" style="font-size: 0.88rem;">
                                     <option value="hardened" selected>Aço Endurecido</option>
                                     <option value="stainless">Aço Inoxidável</option>
                                 </select>
@@ -140,8 +140,8 @@
 
                         <!-- Material do Filamento -->
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary mb-1.5 d-flex align-items-center gap-1.5" for="calcFilament">
-                                <i class="bi bi-palette text-danger"></i>
+                            <label class="form-label small fw-bold text-secondary mb-2 d-flex align-items-center" for="calcFilament">
+                                <i class="bi bi-palette text-danger fs-6 me-2"></i>
                                 <span>Filamento Bambu Lab:</span>
                             </label>
                             <select class="form-select border rounded-3 py-2 px-3" id="calcFilament" style="font-size: 0.88rem;">
@@ -159,8 +159,8 @@
 
                         <!-- Chapa / Mesa de Impressão -->
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary mb-1.5 d-flex align-items-center gap-1.5" for="calcPlate">
-                                <i class="bi bi-square text-warning"></i>
+                            <label class="form-label small fw-bold text-secondary mb-2 d-flex align-items-center" for="calcPlate">
+                                <i class="bi bi-square text-warning fs-6 me-2"></i>
                                 <span>Chapa / Mesa (Build Plate):</span>
                             </label>
                             <select class="form-select border rounded-3 py-2 px-3" id="calcPlate" style="font-size: 0.88rem;">
@@ -174,8 +174,8 @@
 
                         <!-- Objetivo / Tipo de Peça -->
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary mb-1.5 d-flex align-items-center gap-1.5" for="calcObjective">
-                                <i class="bi bi-bullseye text-info"></i>
+                            <label class="form-label small fw-bold text-secondary mb-2 d-flex align-items-center" for="calcObjective">
+                                <i class="bi bi-bullseye text-info fs-6 me-2"></i>
                                 <span>Finalidade da Peça:</span>
                             </label>
                             <select class="form-select border rounded-3 py-2 px-3" id="calcObjective" style="font-size: 0.88rem;">
@@ -386,26 +386,28 @@
                         </div>
                     </div>
 
-                    <div class="row g-3 mt-1">
+                    <div class="row g-3 mt-2">
                         <div class="col-md-6">
-                            <div class="p-2.5 border rounded-3 bg-body">
-                                <span class="small fw-semibold text-muted d-block mb-1">
-                                    <i class="bi bi-fan me-1"></i> Ventoinha Auxiliar da Câmara (Aux Fan):
+                            <div class="p-3 border rounded-3 bg-body-tertiary h-100">
+                                <span class="small fw-semibold text-muted d-flex align-items-center mb-2">
+                                    <i class="bi bi-fan me-2 text-info fs-6"></i>
+                                    <span>Ventoinha Auxiliar da Câmara (Aux Fan):</span>
                                 </span>
-                                <span class="fw-bold" id="resAuxFan">70%</span>
+                                <div class="h5 fw-bold text-body mb-1" id="resAuxFan">70%</div>
                                 <span class="text-muted small d-block" id="resAuxFanTip" style="font-size: 0.75rem;">
-                                    Ajuda a solidificar saliências rápidas.
+                                    Auxilia na solidificação ultra rápida de overhangs.
                                 </span>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="p-2.5 border rounded-3 bg-body">
-                                <span class="small fw-semibold text-muted d-block mb-1">
-                                    <i class="bi bi-door-open me-1"></i> Porta e Tampa de Vidro:
+                            <div class="p-3 border rounded-3 bg-body-tertiary h-100">
+                                <span class="small fw-semibold text-muted d-flex align-items-center mb-2">
+                                    <i class="bi bi-door-open me-2 text-warning fs-6"></i>
+                                    <span>Porta e Tampa de Vidro:</span>
                                 </span>
-                                <span class="small fw-medium" id="resEnclosureStatus">
+                                <div class="small fw-medium text-body" id="resEnclosureStatus" style="line-height: 1.5; font-size: 0.88rem;">
                                     Porta entreaberta recomendada para PLA.
-                                </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -424,47 +426,47 @@
                             <span class="text-muted small">Limites de fluxo volumétrico e velocidades por segmento em mm/s.</span>
                         </div>
                     </div>
-                    <span class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1">Aba Speed</span>
+                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5">Aba Speed</span>
                 </div>
                 <div class="card-body p-4">
                     <div class="row row-cols-2 row-cols-md-3 g-3 text-center">
                         <div class="col">
-                            <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                            <div class="border rounded-3 p-3 bg-body-tertiary h-100">
                                 <div class="text-muted small" style="font-size: 0.75rem;">Parede Externa</div>
                                 <div class="h5 fw-bold text-body mb-0" id="resSpdOuter">150 mm/s</div>
                                 <span class="text-muted" style="font-size: 0.7rem;">Acabamento superficial</span>
                             </div>
                         </div>
                         <div class="col">
-                            <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                            <div class="border rounded-3 p-3 bg-body-tertiary h-100">
                                 <div class="text-muted small" style="font-size: 0.75rem;">Parede Interna</div>
                                 <div class="h5 fw-bold text-body mb-0" id="resSpdInner">250 mm/s</div>
                                 <span class="text-muted" style="font-size: 0.7rem;">Estrutura interna</span>
                             </div>
                         </div>
                         <div class="col">
-                            <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                            <div class="border rounded-3 p-3 bg-body-tertiary h-100">
                                 <div class="text-muted small" style="font-size: 0.75rem;">Preenchimento (Infill)</div>
                                 <div class="h5 fw-bold text-body mb-0" id="resSpdInfill">270 mm/s</div>
                                 <span class="text-muted" style="font-size: 0.7rem;">Velocidade máxima</span>
                             </div>
                         </div>
                         <div class="col">
-                            <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                            <div class="border rounded-3 p-3 bg-body-tertiary h-100">
                                 <div class="text-muted small" style="font-size: 0.75rem;">Superfície de Topo</div>
                                 <div class="h5 fw-bold text-body mb-0" id="resSpdTop">150 mm/s</div>
                                 <span class="text-muted" style="font-size: 0.7rem;">Plano liso sem falhas</span>
                             </div>
                         </div>
                         <div class="col">
-                            <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                            <div class="border rounded-3 p-3 bg-body-tertiary h-100">
                                 <div class="text-muted small" style="font-size: 0.75rem;">Primeira Camada</div>
                                 <div class="h5 fw-bold text-body mb-0" id="resSpdInit">50 mm/s</div>
                                 <span class="text-muted" style="font-size: 0.7rem;">Adesão impecável</span>
                             </div>
                         </div>
                         <div class="col">
-                            <div class="border rounded-3 p-2.5 bg-success-subtle text-success-emphasis">
+                            <div class="border rounded-3 p-3 bg-success-subtle text-success-emphasis h-100">
                                 <div class="text-muted small" style="font-size: 0.75rem;">Vazão Volumétrica Máx</div>
                                 <div class="h5 fw-bold mb-0" id="resMaxVol">21.0 mm³/s</div>
                                 <span class="text-muted" style="font-size: 0.7rem;">Limite seguro do hotend</span>
@@ -748,7 +750,16 @@ Fonte Oficial: Wiki Bambu Lab Brasil (https://bambu-wiki-ptbr.vercel.app/calcula
     document.getElementById('askAiAboutProfileBtn').addEventListener('click', function() {
         if (!currentProfileData) return;
         const p = currentProfileData;
-        const queryText = `Olá! Estou fatiando no Bambu Studio uma peça com o objetivo "${p.inputs.objective.name}" na impressora ${p.inputs.printer.name} usando ${p.inputs.filament.name} e bico de ${p.inputs.nozzle_size}mm. O perfil calculado recomendou ${p.strength.wall_loops} paredes, ${p.strength.infill_density}% de infill ${p.strength.infill_pattern}, bico a ${p.temperature.nozzle_other}°C e mesa a ${p.temperature.bed}°C. Você tem alguma recomendação ou ajuste fino adicional para este caso?`;
+        const queryText = `Estou fatiando no Bambu Studio com o perfil da calculadora e gostaria de orientações e ajustes finos:
+• Impressora: ${p.inputs.printer.name}
+• Filamento: ${p.inputs.filament.name} (Bico: ${p.inputs.nozzle_size}mm ${p.inputs.nozzle_material})
+• Mesa / Chapa: ${p.inputs.plate_id} (${p.temperature.bed}°C) | Bico: ${p.temperature.nozzle_other}°C
+• Objetivo: ${p.inputs.objective.name}
+• Qualidade: Altura ${p.quality.layer_height}mm (1ª camada ${p.quality.initial_layer_height}mm) | Gerador: ${p.quality.wall_generator}
+• Estrutura: ${p.strength.wall_loops} paredes | Infill: ${p.strength.infill_density}% ${p.strength.infill_pattern}
+• Resfriamento: ${p.enclosure_status} | Brim: ${p.adhesion.brim_type} | Suporte: ${p.support.type}
+
+Analise este perfil técnico para a ${p.inputs.printer.name} e recomende otimizações no Bambu Studio para obter o melhor resultado.`;
         
         // Redireciona para o chat com a pergunta pré-preenchida na URL
         window.location.href = `/chat?q=${encodeURIComponent(queryText)}`;

@@ -203,22 +203,65 @@ def get_article(path: str, db_path: str = DB_FILE) -> Optional[Dict[str, Any]]:
         return res
 
 
+COMMON_SEARCH_STOPWORDS = {
+    "a", "o", "as", "os", "de", "da", "do", "das", "dos", "em", "no", "na", "nos", "nas",
+    "por", "para", "com", "sem", "um", "uma", "uns", "umas", "meu", "minha", "meus", "minhas",
+    "seu", "sua", "seus", "suas", "este", "esta", "estes", "estas", "esse", "essa", "esses", "essas",
+    "que", "quem", "qual", "quais", "onde", "como", "quando", "quanto", "porque", "se", "mas", "e", "ou",
+    "já", "ainda", "está", "estou", "estão", "é", "são", "foi", "foram", "era", "ser", "estar", "ter",
+    "tem", "têm", "fazer", "faz", "criando", "acontecendo", "deu", "dar", "ola", "olá", "voce", "você",
+    "algum", "alguma", "alguns", "algumas", "caso", "geral", "bambu", "lab", "usando", "recomendou",
+    "recomendacao", "recomendação", "adicional", "adicionais", "ajuste", "ajustes", "fino", "finos"
+}
+
+
 def search_articles(query: str, limit: int = 20, db_path: str = DB_FILE) -> List[Dict[str, Any]]:
-    """Realiza busca textual utilizando FTS5 com ranqueamento bm25."""
+    """Realiza busca textual utilizando FTS5 com ranqueamento bm25 e fallback inteligente."""
     if not query or not query.strip():
         return []
 
     # Extrai tokens alfanuméricos preservando hífens e modelos (ex: a1, a2l, a1-mini, x1-carbon)
-    raw_tokens = re.findall(r'[a-zA-Z0-9_\-]+', query)
-    tokens = [t.strip("-") for t in raw_tokens if len(t.strip("-")) >= 2]
+    raw_tokens = re.findall(r'[\w\-]+', query.lower(), re.UNICODE)
+    # Filtra palavras pequenas e stopwords gerais
+    meaningful_tokens = [
+        t.strip("-") for t in raw_tokens
+        if len(t.strip("-")) >= 2 and t.strip("-") not in COMMON_SEARCH_STOPWORDS
+    ]
+
+    # Se todas foram filtradas como stopwords, usa os tokens brutos com len >= 2
+    tokens = meaningful_tokens if meaningful_tokens else [
+        t.strip("-") for t in raw_tokens if len(t.strip("-")) >= 2
+    ]
 
     if not tokens:
         return []
 
-    safe_query = " ".join([f'"{token}"*' for token in tokens])
-
     with get_connection(db_path) as conn:
         cursor = conn.cursor()
+
+        # 1. Se houver 1 a 3 tokens específicos, tenta primeiro match restrito (AND)
+        if 1 <= len(tokens) <= 3:
+            safe_and = " ".join([f'"{token}"*' for token in tokens])
+            try:
+                cursor.execute("""
+                    SELECT 
+                        a.id, a.path, a.section, a.subsection, a.title, a.description,
+                        snippet(articles_search, 2, '<mark>', '</mark>', '...', 25) as snippet,
+                        bm25(articles_search) as rank
+                    FROM articles_search s
+                    JOIN articles a ON a.id = s.rowid
+                    WHERE articles_search MATCH ?
+                    ORDER BY rank
+                    LIMIT ?
+                """, (safe_and, limit))
+                results = [dict(r) for r in cursor.fetchall()]
+                if results:
+                    return results
+            except Exception:
+                pass
+
+        # 2. Busca por relevância FTS5 com OR + BM25 (perfeito para frases longas e prompts)
+        safe_or = " OR ".join([f'"{token}"*' for token in tokens[:12]])
         try:
             cursor.execute("""
                 SELECT 
@@ -230,9 +273,15 @@ def search_articles(query: str, limit: int = 20, db_path: str = DB_FILE) -> List
                 WHERE articles_search MATCH ?
                 ORDER BY rank
                 LIMIT ?
-            """, (safe_query, limit))
-            return [dict(r) for r in cursor.fetchall()]
+            """, (safe_or, limit))
+            results = [dict(r) for r in cursor.fetchall()]
+            if results:
+                return results
         except Exception:
+            pass
+
+        # 3. Fallback LIKE tradicional
+        try:
             like_term = f"%{tokens[0]}%"
             cursor.execute("""
                 SELECT id, path, section, subsection, title, description,
@@ -242,6 +291,8 @@ def search_articles(query: str, limit: int = 20, db_path: str = DB_FILE) -> List
                 LIMIT ?
             """, (like_term, like_term, like_term, limit))
             return [dict(r) for r in cursor.fetchall()]
+        except Exception:
+            return []
 
 
 def get_sections_summary(db_path: str = DB_FILE) -> List[Dict[str, Any]]:

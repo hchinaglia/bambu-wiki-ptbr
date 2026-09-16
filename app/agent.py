@@ -22,18 +22,22 @@ from crawler.build_db import DB_FILE, get_article, get_connection, search_articl
 logger = logging.getLogger("bambu_agent")
 
 SYSTEM_PROMPT = """Você é o Assistente Especialista Oficial da Wiki Bambu Lab Brasil (PT-BR).
-Sua missão é responder com máxima precisão, didática e clareza técnica a perguntas sobre todo o ecossistema Bambu Lab documentado em nossa base técnica oficial, que inclui:
-- Séries de impressoras: Linhas X1 (X1-Carbon, X1E), X2D, P1 (P1P, P1S), P2S, A1, A1 Mini, A2L (grande formato com módulo de corte/caneta), Séries H2 (H2, H2S, H2C, H2D, H2D-Pro).
+Sua missão é responder com máxima precisão, didática e autoridade técnica a perguntas sobre todo o ecossistema Bambu Lab documentado em nossa base técnica oficial e nas melhores práticas de engenharia de manufatura aditiva 3D FDM:
+- Séries de impressoras: Linhas X1 (X1-Carbon, X1E), X2D, P1 (P1P, P1S), P2S, A1, A1 Mini, A2L (grande formato de 330×320×325mm com módulo de corte/caneta), Séries H2 (H2, H2S, H2C, H2D, H2D-Pro).
 - Sistemas de alimentação e filamento: AMS, AMS Lite, AMS 2 Pro, AMS HT.
-- Softwares e firmware: Bambu Studio, aplicativo móvel Bambu Handy, MakerWorld.
+- Softwares e fatiamento: Bambu Studio, aplicativo móvel Bambu Handy, MakerWorld.
+- Parâmetros de fatiamento e ciência de materiais: alturas de camada, padrões e densidade de infill, geradores de parede (Arachne vs Classic), velocidades volumétricas máximas, resfriamento, costuras (seam), suportes (Tree / Normal) e adesão de mesa (Brim, chapas PEI/Cool Plate/SuperTack).
 - Manutenção periódica, calibração, diagnósticos de defeitos de impressão e decodificação de erros HMS.
 
 Diretrizes obrigatórias:
-1. Baseie suas respostas prioritariamente no CONTEXTO TÉCNICO fornecido abaixo, extraído diretamente da Wiki Bambu Lab.
-2. IMPORTANTE: Modelos como A2L, X2D, H2/H2S e P2S são produtos oficiais com manuais e documentação técnica presentes nesta Wiki. Nunca afirme que um produto ou termo documentado "não existe". Se o usuário perguntar sobre a A2L ou colar um link de uma impressora, explique suas características, especificações e guias conforme o contexto.
-3. Caso o usuário envie uma imagem, examine cuidadosamente a foto para identificar o defeito (ex: espaguete/cabeleira, descolamento/warping, entupimento de bico/hotend, subextrusão, desalinhamento de camadas) e forneça o diagnóstico e os passos para resolução.
-4. Forneça procedimentos práticos em passos claros e numerados.
-5. Cite sempre os artigos técnicos relevantes usando links em markdown: [Nome do Guia](/wiki/caminho-do-artigo).
+1. Baseie suas respostas no CONTEXTO TÉCNICO fornecido da Wiki Bambu Lab complementado pelo seu profundo domínio de fatiamento no Bambu Studio e engenharia de impressão 3D.
+2. FATIAMENTO & CALCULADORA: Quando o usuário apresentar configurações de fatiamento (do Bambu Studio ou da Calculadora de Perfis) e pedir análises, recomendações ou ajustes finos:
+   - NUNCA dê respostas evasivas ou negativas alegando que o contexto fornecido 'trata apenas de manutenção' ou que 'não há informações de fatiamento'.
+   - Você TEM total autoridade técnica para analisar minuciosamente os parâmetros informados: compatibilidade entre filamento, bico e temperaturas; balanço entre velocidade, resistência mecânica e acabamento estético; necessidade de brim ou tipo de suporte; ventilação da câmara/gabinete.
+   - Forneça recomendações práticas e ajustes finos específicos para o Bambu Studio (ex.: gerador de paredes Arachne para detalhes finos, padrão Gyroid para resistência isotrópica sem risco de colisão do bico, orientação da costura em cantos vivos, compensação X-Y de furos, velocidades na 1ª camada).
+3. MODELOS OFICIAIS: Modelos como A2L, X2D, H2/H2S e P2S são produtos oficiais com manuais e documentação técnica presentes nesta Wiki. Nunca afirme que um produto ou termo documentado "não existe". Para a A2L (grande formato de 330×320×325mm), enfatize a importância da estabilidade térmica da mesa grande, adesão da primeira camada e o limite térmico de 80°C da mesa.
+4. DIAGNÓSTICO VISUAL: Caso o usuário envie uma imagem, examine cuidadosamente a foto para identificar o defeito (ex: espaguete/cabeleira, descolamento/warping, entupimento de bico/hotend, subextrusão, desalinhamento de camadas) e forneça o diagnóstico e os passos para resolução.
+5. PROCEDIMENTOS E LINKS: Forneça procedimentos práticos em passos claros e numerados. Sempre que relevante, cite os artigos técnicos correspondentes usando links em markdown: [Nome do Guia](/wiki/caminho-do-artigo).
 6. Responda sempre em Português do Brasil com tom cordial, profissional e focado na solução prática.
 """
 
@@ -43,7 +47,10 @@ PT_STOPWORDS = {
     "seu", "sua", "seus", "suas", "este", "esta", "estes", "estas", "esse", "essa", "esses", "essas",
     "que", "quem", "qual", "quais", "onde", "como", "quando", "quanto", "porque", "se", "mas", "e", "ou",
     "já", "ainda", "está", "estou", "estão", "é", "são", "foi", "foram", "era", "ser", "estar", "ter",
-    "tem", "têm", "fazer", "faz", "criando", "acontecendo", "deu", "dar"
+    "tem", "têm", "fazer", "faz", "criando", "acontecendo", "deu", "dar", "ola", "olá", "voce", "você",
+    "algum", "alguma", "alguns", "algumas", "caso", "geral", "bambu", "lab", "usando", "recomendou",
+    "recomendacao", "recomendação", "adicional", "adicionais", "ajuste", "ajustes", "fino", "finos",
+    "sobre", "pelo", "pela", "pelos", "pelas", "deste", "desta", "destes", "destas"
 }
 
 SYNONYMS = {
@@ -58,29 +65,68 @@ SYNONYMS = {
     "empenando": ["warping", "primeira camada", "mesa", "brim"],
 }
 
+SPECIALIZED_ENTITIES = {
+    # Impressoras
+    "a2l": ["a2l/maintenance/first-layer-quality-calibration", "a2l/manual/a2l-faq"],
+    "a1-mini": ["a1-mini/manual/intro", "a1-mini/troubleshooting/print-issues-troubleshooting"],
+    "a1": ["a1/manual/intro", "a1-mini/troubleshooting/print-issues-troubleshooting"],
+    "x1": ["x1/manual/intro-x1", "x1/manual/print-from-bambu-studio"],
+    "x1c": ["x1/manual/intro-x1", "x1/manual/print-from-bambu-studio"],
+    "x1-carbon": ["x1/manual/intro-x1", "x1/manual/print-from-bambu-studio"],
+    "p1s": ["p1/manual/intro-p1s", "p1/manual/p1s"],
+    "p1p": ["p1/manual/intro-p1p"],
+    "p2s": ["p2s/manual/intro"],
+    "x2d": ["x2d/manual/intro"],
+    "h2": ["h2/manual/intro"],
+    "h2s": ["h2/manual/intro"],
+
+    # Filamentos
+    "pla": ["filament/pla-pure", "general/filament-guide/materials"],
+    "petg": ["general/filament-guide/materials"],
+    "abs": ["general/filament-guide/materials"],
+    "asa": ["general/filament-guide/materials"],
+    "tpu": ["general/filament-guide/materials"],
+    "pa-cf": ["general/filament-guide/materials"],
+    "pet-cf": ["general/filament-guide/materials"],
+    "pc": ["general/filament-guide/materials"],
+}
+
+SLICING_KEYWORDS = {
+    "fatiando", "fatiamento", "fatiar", "studio", "perfil", "infill", "preenchimento",
+    "camada", "parede", "paredes", "brim", "gyroid", "suporte", "suportes",
+    "arachne", "seam", "costura", "velocidade", "temperatura", "resfriamento"
+}
+
+SLICING_DEFAULT_ARTICLES = [
+    "software/bambu-studio/how-to-set-slicing-parameters",
+    "filament-acc/filament/slice-param",
+    "general/troubleshooting/first-layer",
+    "software/bambu-studio/studio-quick-start"
+]
+
 
 def clean_query_keywords(query: str) -> List[str]:
     """Remove stopwords e retorna palavras-chave limpas preservando códigos como A1, X1, A2L."""
-    raw_tokens = re.findall(r'[a-zA-Z0-9_\-]+', query)
+    raw_tokens = re.findall(r'[\w\-]+', query.lower(), re.UNICODE)
     return [
-        t.lower().strip("-") for t in raw_tokens
+        t.strip("-") for t in raw_tokens
         if len(t.strip("-")) >= 2
-        and t.lower().strip("-") not in PT_STOPWORDS
-        and t.lower().strip("-") not in ["http", "https", "com", "wiki", "bambulab", "link", "www"]
+        and t.strip("-") not in PT_STOPWORDS
+        and t.strip("-") not in ["http", "https", "com", "wiki", "bambulab", "link", "www"]
     ]
 
 
 def retrieve_wiki_context(
     query: str,
     current_path: Optional[str] = None,
-    limit: int = 4
+    limit: int = 5
 ) -> Tuple[str, List[Dict[str, str]]]:
     """
     Busca os artigos mais relevantes no banco SQLite com:
-    1. Extração e resolução de links/URLs completos ou parciais (ex: https://wiki.bambulab.com/en/a2l, /wiki/a2l).
-    2. Correspondência direta por caminho exato ou seção raiz (ex: 'a2l', 'x1', 'ams').
+    1. Extração e resolução de links/URLs completos ou parciais (ex: /wiki/a2l).
+    2. Roteamento de entidades técnicas (A2L, Bambu Studio, Filamentos, Fatiamento).
     3. Contexto da página atualmente navegada pelo usuário (current_path).
-    4. Busca textual FTS5 com expansão de sinônimos e termos alfanuméricos curtos (ex: A1, P1, X1, A2L).
+    4. Busca textual FTS5 com ranqueamento BM25 e sinônimos.
     """
     extracted_paths: List[str] = []
 
@@ -107,13 +153,7 @@ def retrieve_wiki_context(
     for u in urls:
         clean_text = clean_text.replace(u, " ")
 
-    raw_tokens = re.findall(r'[a-zA-Z0-9_\-]+', clean_text)
-    keywords = [
-        t.lower().strip("-") for t in raw_tokens
-        if len(t.strip("-")) >= 2
-        and t.lower().strip("-") not in PT_STOPWORDS
-        and t.lower().strip("-") not in ["http", "https", "com", "wiki", "bambulab", "link", "www"]
-    ]
+    keywords = clean_query_keywords(clean_text)
 
     # Também adiciona partes dos caminhos extraídos (ex: 'a2l', 'intro')
     for ep in extracted_paths:
@@ -135,7 +175,7 @@ def retrieve_wiki_context(
         with get_connection(DB_FILE) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, path, section, subsection, title, description, plain_text FROM articles WHERE path LIKE ? OR section = ? LIMIT ?",
+                "SELECT id, path, section, subsection, title, description, plain_text, html_content FROM articles WHERE path LIKE ? OR section = ? LIMIT ?",
                 (f"{p}/%", p, limit)
             )
             for sub_row in cursor.fetchall():
@@ -146,7 +186,28 @@ def retrieve_wiki_context(
                 if len(found_articles) >= limit:
                     break
 
-    # 4. Busca textual FTS5
+    # 4. Roteamento inteligente de entidades especializadas
+    q_lower = query.lower()
+    for ent_key, ent_paths in SPECIALIZED_ENTITIES.items():
+        # Match exato de entidade (evita falsos positivos em substrings)
+        if re.search(r'\b' + re.escape(ent_key) + r'\b', q_lower):
+            for target_path in ent_paths:
+                if target_path not in seen_paths and len(found_articles) < limit:
+                    art = get_article(target_path, db_path=DB_FILE)
+                    if art:
+                        found_articles.append(art)
+                        seen_paths.add(art["path"])
+
+    # Se a pergunta envolver fatiamento / parâmetros do Bambu Studio
+    if any(re.search(r'\b' + re.escape(sk) + r'\b', q_lower) for sk in SLICING_KEYWORDS):
+        for target_path in SLICING_DEFAULT_ARTICLES:
+            if target_path not in seen_paths and len(found_articles) < limit:
+                art = get_article(target_path, db_path=DB_FILE)
+                if art:
+                    found_articles.append(art)
+                    seen_paths.add(art["path"])
+
+    # 5. Busca textual FTS5 com os termos relevantes
     if len(found_articles) < limit and keywords:
         clean_query = " ".join(keywords)
         search_results = search_articles(clean_query, limit=limit * 2, db_path=DB_FILE)
@@ -169,21 +230,6 @@ def retrieve_wiki_context(
             if len(found_articles) >= limit:
                 break
 
-    # 5. Fallback palavra por palavra
-    if not found_articles and keywords:
-        for w in keywords:
-            res = search_articles(w, limit=limit, db_path=DB_FILE)
-            for sr in res:
-                if sr["path"] not in seen_paths:
-                    art = get_article(sr["path"], db_path=DB_FILE)
-                    if art:
-                        found_articles.append(art)
-                        seen_paths.add(sr["path"])
-                if len(found_articles) >= limit:
-                    break
-            if found_articles:
-                break
-
     context_parts = []
     sources = []
 
@@ -191,7 +237,15 @@ def retrieve_wiki_context(
         title = art.get("title", "Guia")
         path = art.get("path", "")
         desc = art.get("description", "")
-        plain = (art.get("plain_text") or "")[:1800]
+        
+        # Recupera texto limpo; se estiver vazio, extrai do html_content
+        plain = (art.get("plain_text") or "").strip()
+        if not plain and art.get("html_content"):
+            clean_html = re.sub(r'<[^>]+>', ' ', art.get("html_content", ""))
+            plain = re.sub(r'\s+', ' ', clean_html).strip()
+        if not plain:
+            plain = desc or ""
+        plain = plain[:1800]
 
         source_info = {
             "title": title,
@@ -243,11 +297,14 @@ def build_contents_payload(
         })
 
     prompt_text = (
-        f"CONTEXTO EXTRAÍDO DA WIKI BAMBU LAB:\n"
+        f"CONTEXTO TÉCNICO DA WIKI BAMBU LAB:\n"
         f"{context_text}\n\n"
-        f"PERGUNTA DO USUÁRIO:\n"
+        f"MENSAGEM / CONSULTA DO USUÁRIO:\n"
         f"{question.strip()}\n\n"
-        f"Responda detalhadamente em português com base no contexto e na imagem (se fornecida), citando os manuais da Wiki com links [Título](/wiki/caminho)."
+        f"INSTRUÇÕES OBRIGATÓRIAS:\n"
+        f"- Responda com profundo conhecimento técnico em português do Brasil.\n"
+        f"- Caso a mensagem trate de parâmetros de fatiamento do Bambu Studio ou de um perfil da Calculadora, realize uma análise aprofundada de cada parâmetro informado (paredes, infill, temperaturas, adesão, velocidades), explique o impacto no resultado da impressão e ofereça ajustes finos práticos no Bambu Studio. NUNCA se recuse a orientar sobre fatiamento.\n"
+        f"- Sempre que oportuno, cite artigos e manuais da Wiki com links no formato [Título do Guia](/wiki/caminho).\n"
     )
     user_parts.append({"text": prompt_text})
 
@@ -286,7 +343,7 @@ def ask_agent(
             "status": "error"
         }
 
-    context_text, sources = retrieve_wiki_context(question, current_path=current_path, limit=4)
+    context_text, sources = retrieve_wiki_context(question, current_path=current_path, limit=5)
     contents = build_contents_payload(question, context_text, history, image_b64, mime_type)
 
     if selected_model == "auto" or selected_model not in SUPPORTED_MODELS:
@@ -372,7 +429,7 @@ def stream_agent_response(
         yield f"data: {json.dumps({'type': 'error', 'message': 'Nenhuma chave da API Gemini configurada. Insira sua chave no ícone ⚙️ para conversar com a IA.'})}\n\n"
         return
 
-    context_text, sources = retrieve_wiki_context(question, current_path=current_path, limit=4)
+    context_text, sources = retrieve_wiki_context(question, current_path=current_path, limit=5)
     contents = build_contents_payload(question, context_text, history, image_b64, mime_type)
 
     if selected_model == "auto" or selected_model not in SUPPORTED_MODELS:
