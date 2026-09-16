@@ -403,7 +403,7 @@ async def api_chat(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Formato JSON inválido")
 
-    query = (body.get("query") or body.get("question") or "").strip()
+    query = (body.get("query") or body.get("question") or body.get("message") or "").strip()
     selected_model = body.get("model", "auto")
     history = body.get("history", [])
     image_b64 = body.get("image_b64")
@@ -431,7 +431,7 @@ async def api_chat_stream(request: Request):
     except Exception:
         raise HTTPException(status_code=400, detail="Formato JSON inválido")
 
-    query = (body.get("query") or body.get("question") or "").strip()
+    query = (body.get("query") or body.get("question") or body.get("message") or "").strip()
     selected_model = body.get("model", "auto")
     history = body.get("history", [])
     image_b64 = body.get("image_b64")
