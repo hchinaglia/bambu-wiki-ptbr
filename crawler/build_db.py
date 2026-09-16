@@ -61,10 +61,6 @@ def get_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
         conn = sqlite3.connect(actual_path, timeout=60.0)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA busy_timeout=60000;")
-        try:
-            conn.execute("PRAGMA journal_mode=WAL;")
-        except Exception:
-            pass
         conn.execute("SELECT 1;").fetchone()
         return conn
     except Exception:
