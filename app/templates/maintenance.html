@@ -23,9 +23,16 @@
                     Sua impressora dura anos com precisão impecável quando mantida em dia. Acompanhe os ciclos de lubrificação, limpeza e trocas recomendadas pela Bambu Lab.
                 </p>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="resetHistoryBtn" title="Limpar histórico gravado">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i> Resetar Histórico
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="exportBackupBtn" title="Baixar arquivo de backup do histórico">
+                    <i class="bi bi-download me-1"></i> Exportar Backup
+                </button>
+                <label class="btn btn-outline-secondary btn-sm rounded-pill px-3 mb-0 cursor-pointer" title="Restaurar histórico a partir de arquivo JSON">
+                    <i class="bi bi-upload me-1"></i> Importar
+                    <input type="file" id="importBackupInput" accept=".json" class="d-none">
+                </label>
+                <button class="btn btn-outline-danger btn-sm rounded-pill px-3" id="resetHistoryBtn" title="Limpar histórico gravado">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Resetar
                 </button>
             </div>
         </div>
@@ -293,6 +300,44 @@ document.addEventListener('DOMContentLoaded', function() {
             toast.show();
         });
     });
+
+    // Exportar Backup
+    const exportBtn = document.getElementById('exportBackupBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(maintenanceLog, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `bambu_manutencao_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.click();
+        });
+    }
+
+    // Importar Backup
+    const importInput = document.getElementById('importBackupInput');
+    if (importInput) {
+        importInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (typeof imported === 'object' && imported !== null) {
+                        maintenanceLog = Object.assign({}, maintenanceLog, imported);
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(maintenanceLog));
+                        refreshStatuses();
+                        alert('Backup importado com sucesso! Os registros foram sincronizados.');
+                    } else {
+                        alert('Arquivo de backup inválido.');
+                    }
+                } catch (err) {
+                    alert('Erro ao processar arquivo de backup: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
 
     // Resetar Histórico
     resetHistoryBtn.addEventListener('click', function() {
