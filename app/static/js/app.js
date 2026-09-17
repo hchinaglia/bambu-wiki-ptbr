@@ -55,7 +55,15 @@ function initGlobalSearch() {
 
     // Tecla de atalho (Ctrl+K ou /)
     window.addEventListener("keydown", (e) => {
-        if ((e.key === "/" || ((e.ctrlKey || e.metaKey) && e.key === "k")) && document.activeElement !== searchInput) {
+        const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+        const isEditable = activeTag === "input" || activeTag === "textarea" || document.activeElement?.isContentEditable;
+
+        // Se for Ctrl+K ou Cmd+K, permitimos focar mesmo que esteja em outro input
+        const isCmdK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k";
+        // Se for '/', só ativa se NÃO estiver digitando em nenhum campo de texto
+        const isSlash = e.key === "/" && !isEditable;
+
+        if ((isCmdK || isSlash) && document.activeElement !== searchInput) {
             e.preventDefault();
             searchInput.focus();
             searchInput.select();

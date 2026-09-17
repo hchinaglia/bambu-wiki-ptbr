@@ -4,10 +4,11 @@ Aplicação Web FastAPI para a Wiki Bambu Lab em Português (PT-BR).
 
 import os
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi import FastAPI, HTTPException, Query, Request, Response
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from crawler.build_db import (
     DB_FILE,
@@ -73,8 +74,29 @@ if os.path.exists(STATIC_DIR):
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
+@app.exception_handler(HTTPException)
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        if request.url.path.startswith("/api/"):
+            return JSONResponse(status_code=404, content={"error": "Not Found", "detail": str(exc.detail)})
+        return templates.TemplateResponse(
+            request=request,
+            name="404.html",
+            context={
+                "request": request,
+                "nav_tree": get_navigation_tree(),
+                "detail": str(exc.detail),
+            },
+            status_code=404,
+        )
+    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc.detail)})
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, (HTTPException, StarletteHTTPException)):
+        return await http_exception_handler(request, exc)
     import traceback
     return JSONResponse(
         status_code=500,
@@ -152,6 +174,90 @@ def get_navigation_tree():
         groups["Outros Guias"] = other_sections
 
     return groups
+
+
+# Cache em memória para o sitemap XML gerado
+_sitemap_xml_cache: Optional[str] = None
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+async def robots_txt():
+    """Retorna arquivo robots.txt com diretivas para mecanismos de busca e sitemap."""
+    content = """User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://bambu-wiki-ptbr.vercel.app/sitemap.xml
+"""
+    return PlainTextResponse(content.strip(), media_type="text/plain")
+
+
+@app.get("/sitemap.xml")
+async def sitemap_xml(request: Request):
+    """Gera o Sitemap XML dinâmico contendo ferramentas, seções e todos os 2.480+ artigos da wiki."""
+    global _sitemap_xml_cache
+    if _sitemap_xml_cache is not None:
+        return Response(content=_sitemap_xml_cache, media_type="application/xml")
+
+    base_url = "https://bambu-wiki-ptbr.vercel.app"
+
+    # Ferramentas Maker e Páginas Estáticas Principais
+    core_pages = [
+        {"loc": f"{base_url}/", "changefreq": "daily", "priority": "1.0"},
+        {"loc": f"{base_url}/orcamento", "changefreq": "weekly", "priority": "0.9"},
+        {"loc": f"{base_url}/calculadora", "changefreq": "weekly", "priority": "0.9"},
+        {"loc": f"{base_url}/falhas", "changefreq": "weekly", "priority": "0.9"},
+        {"loc": f"{base_url}/manutencao", "changefreq": "weekly", "priority": "0.9"},
+        {"loc": f"{base_url}/filamentos", "changefreq": "weekly", "priority": "0.8"},
+        {"loc": f"{base_url}/cores", "changefreq": "weekly", "priority": "0.8"},
+        {"loc": f"{base_url}/hms", "changefreq": "weekly", "priority": "0.8"},
+        {"loc": f"{base_url}/chat", "changefreq": "weekly", "priority": "0.8"},
+    ]
+
+    # Seções de modelos/hardware/software
+    section_pages = [
+        {"loc": f"{base_url}/wiki/{sec_id}", "changefreq": "weekly", "priority": "0.8"}
+        for sec_id in SECTION_CONFIG.keys()
+    ]
+
+    # Artigos do banco de dados SQLite
+    article_urls = []
+    try:
+        with get_connection(DB_FILE) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT path, updated_at FROM articles")
+            for row in cursor.fetchall():
+                path = row["path"]
+                up = row["updated_at"]
+                lastmod = up[:10] if (up and len(up) >= 10) else None
+                article_urls.append({
+                    "loc": f"{base_url}/wiki/{path}",
+                    "lastmod": lastmod,
+                    "changefreq": "weekly",
+                    "priority": "0.7"
+                })
+    except Exception:
+        pass
+
+    xml_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+
+    for item in core_pages + section_pages + article_urls:
+        xml_lines.append("  <url>")
+        xml_lines.append(f"    <loc>{item['loc']}</loc>")
+        if item.get("lastmod"):
+            xml_lines.append(f"    <lastmod>{item['lastmod']}</lastmod>")
+        xml_lines.append(f"    <changefreq>{item['changefreq']}</changefreq>")
+        xml_lines.append(f"    <priority>{item['priority']}</priority>")
+        xml_lines.append("  </url>")
+
+    xml_lines.append("</urlset>")
+    generated_xml = "\n".join(xml_lines)
+    _sitemap_xml_cache = generated_xml
+
+    return Response(content=generated_xml, media_type="application/xml")
 
 
 @app.get("/", response_class=HTMLResponse)

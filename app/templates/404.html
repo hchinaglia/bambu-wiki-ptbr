@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}Página Não Encontrada (404) — Wiki Bambu Lab Brasil{% endblock %}
+{% block description %}A página ou artigo da Wiki Bambu Lab solicitado não foi encontrado ou mudou de endereço. Busque em nossa base com mais de 2.480 artigos traduzidos.{% endblock %}
+
+{% block main_content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 text-center">
+            
+            <!-- Badge de Status -->
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill bg-danger-subtle text-danger border border-danger-subtle mb-4">
+                <i class="bi bi-exclamation-octagon-fill"></i>
+                <span class="fw-bold small">CÓDIGO 404 • FILAMENTO NÃO ENCONTRADO</span>
+            </div>
+
+            <!-- Ilustração Visual de Extrusão / Erro -->
+            <div class="my-2 position-relative d-inline-block">
+                <div class="display-1 fw-bold text-body-tertiary" style="letter-spacing: 4px; font-size: calc(4rem + 4vw);">
+                    4<span class="text-success">0</span>4
+                </div>
+                <div class="position-absolute top-50 start-50 translate-middle bg-body px-3 py-1 rounded-pill border shadow-xs">
+                    <i class="bi bi-printer text-success me-1"></i>
+                    <span class="small fw-semibold text-muted">Bambu Studio Camada 0</span>
+                </div>
+            </div>
+
+            <h1 class="h2 fw-bold mt-3 mb-2 text-body">Ops! Parece que esta página saiu do percurso.</h1>
+            <p class="text-muted mx-auto mb-4" style="max-width: 580px;">
+                O artigo, guia técnico ou ferramenta que você tentou acessar não existe, foi movido ou o link está incorreto. Mas não se preocupe, temos mais de <strong>2.480 artigos oficiais</strong> disponíveis!
+            </p>
+
+            <!-- Barra de Busca Rápida -->
+            <div class="card border rounded-4 p-2.5 p-md-3 shadow-xs bg-body mb-4 mx-auto" style="max-width: 560px;">
+                <form action="/search" method="GET">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-0 text-muted ps-3">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="q" class="form-control border-0 bg-transparent py-2" placeholder="O que você está procurando? (Ex: P1S, correia, AMS...)" autofocus autocomplete="off">
+                        <button class="btn btn-success px-4 rounded-3 fw-semibold" type="submit">
+                            Buscar na Wiki
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Botões de Ação Principal -->
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
+                <a href="/" class="btn btn-primary px-3 py-2 rounded-3 shadow-xs">
+                    <i class="bi bi-house-door me-1"></i> Ir para a Página Inicial
+                </a>
+                <button type="button" class="btn btn-outline-success px-3 py-2 rounded-3" onclick="open404AiChat()">
+                    <i class="bi bi-robot me-1"></i> Perguntar ao Assistente IA
+                </button>
+                <a href="/falhas" class="btn btn-outline-secondary px-3 py-2 rounded-3">
+                    <i class="bi bi-patch-question me-1"></i> Diagnóstico de Falhas
+                </a>
+                <a href="/orcamento" class="btn btn-outline-secondary px-3 py-2 rounded-3">
+                    <i class="bi bi-cash-stack me-1"></i> Calculadora 3D
+                </a>
+            </div>
+
+            <!-- Atalhos para Modelos e Guias Mais Acessados -->
+            <div class="card border rounded-4 p-4 bg-body shadow-xs text-start">
+                <h6 class="fw-bold mb-3 text-body d-flex align-items-center gap-2">
+                    <i class="bi bi-compass text-success"></i> Guias mais procurados pela comunidade:
+                </h6>
+                <div class="row g-2">
+                    <div class="col-6 col-md-3">
+                        <a href="/wiki/x1" class="d-block p-2.5 rounded-3 border text-decoration-none bg-body-secondary text-body hover-shadow">
+                            <div class="fw-bold small"><i class="bi bi-cpu text-primary me-1"></i> Série X1</div>
+                            <span class="text-muted" style="font-size: 0.75rem;">X1 / X1-Carbon / Combos</span>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="/wiki/p1" class="d-block p-2.5 rounded-3 border text-decoration-none bg-body-secondary text-body hover-shadow">
+                            <div class="fw-bold small"><i class="bi bi-box-seam text-success me-1"></i> Série P1</div>
+                            <span class="text-muted" style="font-size: 0.75rem;">P1P / P1S / Upgrades</span>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="/wiki/a1" class="d-block p-2.5 rounded-3 border text-decoration-none bg-body-secondary text-body hover-shadow">
+                            <div class="fw-bold small"><i class="bi bi-printer text-warning me-1"></i> Série A1</div>
+                            <span class="text-muted" style="font-size: 0.75rem;">A1 / A1 Mini & AMS Lite</span>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="/wiki/ams" class="d-block p-2.5 rounded-3 border text-decoration-none bg-body-secondary text-body hover-shadow">
+                            <div class="fw-bold small"><i class="bi bi-palette text-info me-1"></i> Sistema AMS</div>
+                            <span class="text-muted" style="font-size: 0.75rem;">Multicolor & Manutenção</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function open404AiChat() {
+    if (typeof openDrawerWithPrompt === 'function') {
+        openDrawerWithPrompt("Olá! Procurei uma página na Wiki e ela não foi encontrada (404). Você pode me ajudar a localizar o manual ou guia sobre: ");
+    } else {
+        const offcanvasEl = document.getElementById('aiChatDrawer');
+        if (offcanvasEl) {
+            const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+            bsOffcanvas.show();
+        }
+    }
+}
+</script>
+{% endblock %}
