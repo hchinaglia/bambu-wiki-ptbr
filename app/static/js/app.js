@@ -350,6 +350,16 @@ window.askArticleDoubt = function(title, path) {
     }
 };
 
+// Listener global para botões de tirar dúvida no artigo
+document.addEventListener("click", function(e) {
+    const btn = e.target.closest(".btn-ask-article-doubt");
+    if (btn) {
+        const title = btn.getAttribute("data-doubt-title") || "";
+        const path = btn.getAttribute("data-doubt-path") || "";
+        window.askArticleDoubt(title, path);
+    }
+});
+
 async function handleDrawerChatSubmit(e) {
     e.preventDefault();
     const input = document.getElementById("drawerChatInput");

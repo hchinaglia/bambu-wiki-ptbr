@@ -88,7 +88,7 @@
                         <span class="text-muted small">O assistente IA pode explicar o passo a passo com base exatamente neste artigo.</span>
                     </div>
                 </div>
-                <button class="btn btn-success btn-sm fw-semibold rounded-pill px-3.5 flex-shrink-0 shadow-xs" onclick="askArticleDoubt({{ article.title | tojson }}, {{ article.path | tojson }})">
+                <button class="btn btn-success btn-sm fw-semibold rounded-pill px-3.5 flex-shrink-0 shadow-xs btn-ask-article-doubt" data-doubt-title="{{ article.title }}" data-doubt-path="{{ article.path }}">
                     <i class="bi bi-chat-dots me-1"></i> Tirar Dúvida com IA
                 </button>
             </div>
@@ -159,7 +159,7 @@
                 <p class="text-muted small mb-2.5" style="font-size: 0.78rem; line-height: 1.4;">
                     Pergunte ao Especialista IA com o contexto específico deste artigo pré-carregado.
                 </p>
-                <button class="btn btn-sm btn-success fw-semibold w-100 d-flex align-items-center justify-content-center gap-1.5 rounded-pill shadow-xs" onclick="askArticleDoubt({{ article.title | tojson }}, {{ article.path | tojson }})">
+                <button class="btn btn-sm btn-success fw-semibold w-100 d-flex align-items-center justify-content-center gap-1.5 rounded-pill shadow-xs btn-ask-article-doubt" data-doubt-title="{{ article.title }}" data-doubt-path="{{ article.path }}">
                     <i class="bi bi-chat-dots"></i> Tirar Dúvida com IA
                 </button>
             </div>
