@@ -1,0 +1,622 @@
+{% extends "layout.html" %}
+
+{% block title %}Calculadora de Orçamento & Lucro de Impressão 3D — Wiki Bambu Lab{% endblock %}
+{% block description %}Calcule o custo exato de material, energia, depreciação e defina seu preço de venda com lucro garantido para impressões no Bambu Studio.{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-0 px-lg-3">
+
+    <!-- Hero Header -->
+    <div class="card border-0 bg-success-subtle border border-success-subtle rounded-4 p-4 p-lg-4.5 mb-4 shadow-xs">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-success text-white rounded-pill px-3 py-1 fw-semibold small">
+                        <i class="bi bi-calculator me-1"></i> Precificação Inteligente
+                    </span>
+                    <span class="badge bg-white text-success border border-success-subtle rounded-pill px-2.5 py-1 small">
+                        Bambu Studio & AMS
+                    </span>
+                </div>
+                <h1 class="h3 fw-bold mb-1 text-success-emphasis">Calculadora de Orçamento & Lucro 3D</h1>
+                <p class="text-muted small mb-0">
+                    Descubra o custo real por grama, energia, desgaste da máquina e gere propostas prontas para enviar no WhatsApp com 1 clique.
+                </p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-outline-success btn-sm d-flex align-items-center gap-1.5 fw-semibold" id="copyWhatsappBtn">
+                    <i class="bi bi-whatsapp"></i> <span>Copiar p/ WhatsApp</span>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1.5" onclick="window.print()">
+                    <i class="bi bi-printer"></i> <span>Imprimir / PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dropzone de Arquivo .3MF (Leitor Automático no Navegador) -->
+    <div class="card border border-2 border-dashed rounded-4 p-3.5 mb-4 bg-body position-relative shadow-xs" id="dropzone3mf">
+        <input type="file" id="fileInput3mf" class="position-absolute w-100 h-100 top-0 start-0 opacity-0 cursor-pointer" accept=".3mf, .gcode.3mf">
+        <div class="d-flex flex-column flex-md-row align-items-center gap-3 text-center text-md-start">
+            <div class="rounded-circle bg-primary-subtle text-primary p-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 52px; height: 52px;">
+                <i class="bi bi-file-earmark-zip fs-4"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="fw-bold mb-1 text-body">Já fatiou no Bambu Studio? Arraste o arquivo <code>.3mf</code> aqui!</h6>
+                <p class="text-muted small mb-0">
+                    O navegador extrai automaticamente o peso em gramas, tempo de impressão e filamentos usados sem você precisar digitar nada.
+                </p>
+            </div>
+            <button class="btn btn-sm btn-primary rounded-pill px-3.5 flex-shrink-0" type="button">
+                <i class="bi bi-folder2-open me-1"></i> Selecionar .3mf
+            </button>
+        </div>
+        <!-- Banner de Arquivo Carregado -->
+        <div id="loaded3mfInfo" class="mt-3 p-3 bg-primary-subtle border border-primary-subtle rounded-3 d-none">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <img id="plateThumbnail" src="" class="rounded border shadow-xs d-none" style="width: 48px; height: 48px; object-fit: cover;" alt="Mesa 3MF">
+                    <div>
+                        <strong class="text-primary-emphasis small d-block" id="loaded3mfFileName">modelo.3mf</strong>
+                        <span class="text-muted small" id="loaded3mfDetails">45g • 2h 15m • 1 Cor</span>
+                    </div>
+                </div>
+                <span class="badge bg-success text-white rounded-pill px-3 py-1.5 small">
+                    <i class="bi bi-check2-circle me-1"></i> Valores Carregados no Formulário
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Presets Rápidos de Precificação -->
+    <div class="card border rounded-4 p-3 mb-4 shadow-xs bg-body">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
+            <span class="small fw-bold text-uppercase text-muted">
+                <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Cenários Comerciais (Presets Rápidos):
+            </span>
+            <span class="text-muted small" style="font-size: 0.75rem;">Clique para preencher margens e taxas automaticamente:</span>
+        </div>
+        <div class="d-flex flex-wrap gap-2" id="presetQuoteButtons">
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill quote-preset-btn" data-margin="30" data-risk="5" data-labor="0" data-deprec="1.5">
+                🤝 Amigo / Custo Quase Zero (30% Margem)
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill quote-preset-btn active" data-margin="100" data-risk="10" data-labor="10" data-deprec="2.5">
+                💼 Prestação de Serviços Padrão (100% Margem)
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill quote-preset-btn" data-margin="200" data-risk="15" data-labor="25" data-deprec="3.5">
+                🏆 Peça Técnica / Engenharia (200% Margem)
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-warning rounded-pill quote-preset-btn" data-margin="150" data-risk="15" data-labor="15" data-deprec="3.0">
+                🎨 Action Figure Multicolor AMS (150% Margem)
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+
+        <!-- Coluna Esquerda: Formulário de Parâmetros -->
+        <div class="col-lg-7">
+            <div class="d-flex flex-column gap-4">
+
+                <!-- Bloco 1: Material & Filamento -->
+                <div class="card border rounded-4 shadow-sm bg-body overflow-hidden">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-layers text-success fs-5"></i>
+                        <h2 class="h6 fw-bold mb-0">1. Material & Filamento Gasto</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="partGramsInput" class="form-label small fw-semibold">
+                                    Peso Gasto pelo Fatiador (Gramas) <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" id="partGramsInput" class="form-control" value="65" min="1" step="0.5">
+                                    <span class="input-group-text bg-body-tertiary">g</span>
+                                </div>
+                                <div class="form-text" style="font-size: 0.72rem;">Inclui suportes e torre de purga do AMS.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="spoolPriceInput" class="form-label small fw-semibold">
+                                    Preço do Carretel (1 kg / 1000g) <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body-tertiary">R$</span>
+                                    <input type="number" id="spoolPriceInput" class="form-control" value="89.00" min="10" step="1.00">
+                                </div>
+                                <div class="form-text" style="font-size: 0.72rem;">Média nacional: R$ 79 a R$ 130.</div>
+                            </div>
+                            <div class="col-12">
+                                <label for="materialTypeSelect" class="form-label small fw-semibold">Tipo de Filamento</label>
+                                <select id="materialTypeSelect" class="form-select">
+                                    <option value="pla" selected>PLA / PLA Matte / PLA Silk (Padrão Decorativo)</option>
+                                    <option value="petg">PETG / PETG HF (Mecânico & Resistente)</option>
+                                    <option value="abs_asa">ABS / ASA (Alta Temperatura & Resistência UV)</option>
+                                    <option value="tpu">TPU 95A (Elastômero Flexível)</option>
+                                    <option value="cf_technical">Composto de Fibra de Carbono (PLA-CF / PETG-CF / PA-CF)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloco 2: Tempo de Impressão & Consumo de Energia -->
+                <div class="card border rounded-4 shadow-sm bg-body overflow-hidden">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-info fs-5"></i>
+                        <h2 class="h6 fw-bold mb-0">2. Tempo de Impressão & Eletricidade</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3">
+                                <label for="printHoursInput" class="form-label small fw-semibold">Horas</label>
+                                <div class="input-group">
+                                    <input type="number" id="printHoursInput" class="form-control" value="3" min="0" max="500">
+                                    <span class="input-group-text bg-body-tertiary">h</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label for="printMinutesInput" class="form-label small fw-semibold">Minutos</label>
+                                <div class="input-group">
+                                    <input type="number" id="printMinutesInput" class="form-control" value="25" min="0" max="59">
+                                    <span class="input-group-text bg-body-tertiary">min</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="printerModelSelect" class="form-label small fw-semibold">Modelo da Impressora (Potência)</label>
+                                <select id="printerModelSelect" class="form-select">
+                                    <option value="80">Bambu Lab A1 Mini (~80 Watts médio)</option>
+                                    <option value="110">Bambu Lab A1 Full Size (~110 Watts médio)</option>
+                                    <option value="130">Bambu Lab P1P Aberta (~130 Watts médio)</option>
+                                    <option value="160" selected>Bambu Lab P1S Fechada (~160 Watts médio)</option>
+                                    <option value="220">Bambu Lab X1-Carbon (~220 Watts médio)</option>
+                                    <option value="350">Bambu Lab X1E (~350 Watts com câmara)</option>
+                                    <option value="300">Bambu Lab A2L Grande Formato (~300 Watts)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="kwhRateInput" class="form-label small fw-semibold">Tarifa Elétrica Local (R$/kWh)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body-tertiary">R$</span>
+                                    <input type="number" id="kwhRateInput" class="form-control" value="0.85" min="0.10" step="0.05">
+                                    <span class="input-group-text bg-body-tertiary">por kWh</span>
+                                </div>
+                                <div class="form-text" style="font-size: 0.72rem;">Média no Brasil varia entre R$ 0,75 e R$ 1,05/kWh (consulte sua conta de luz).</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloco 3: Custos Indiretos, Máquina & Mão de Obra -->
+                <div class="card border rounded-4 shadow-sm bg-body overflow-hidden">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-tools text-warning fs-5"></i>
+                        <h2 class="h6 fw-bold mb-0">3. Custos de Máquina & Mão de Obra</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="machineDeprecInput" class="form-label small fw-semibold">
+                                    Desgaste da Máquina & Manutenção
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body-tertiary">R$</span>
+                                    <input type="number" id="machineDeprecInput" class="form-control" value="2.50" min="0" step="0.50">
+                                    <span class="input-group-text bg-body-tertiary">/ hora</span>
+                                </div>
+                                <div class="form-text" style="font-size: 0.72rem;">Cobre troca de bicos, correias, graxas e retorno do investimento.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="laborTimeInput" class="form-label small fw-semibold">
+                                    Tempo de Trabalho Humano (Acabamento)
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" id="laborTimeInput" class="form-control" value="15" min="0" step="5">
+                                    <span class="input-group-text bg-body-tertiary">minutos</span>
+                                </div>
+                                <div class="form-text" style="font-size: 0.72rem;">Fatiamento, remoção de suportes, lixamento e embalagem.</div>
+                            </div>
+                            <div class="col-12">
+                                <label for="laborRateInput" class="form-label small fw-semibold">Valor da Sua Hora de Trabalho</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-body-tertiary">R$</span>
+                                    <input type="number" id="laborRateInput" class="form-control" value="30.00" min="0" step="5.00">
+                                    <span class="input-group-text bg-body-tertiary">/ hora</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloco 4: Risco de Falhas & Margem de Lucro -->
+                <div class="card border rounded-4 shadow-sm bg-body overflow-hidden">
+                    <div class="card-header bg-body border-bottom py-3 px-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-graph-up-arrow text-danger fs-5"></i>
+                        <h2 class="h6 fw-bold mb-0">4. Risco de Falhas & Margem de Lucro</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="riskMarginInput" class="form-label small fw-semibold">
+                                    Adicional de Risco / Perdas (%)
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" id="riskMarginInput" class="form-control" value="10" min="0" max="50">
+                                    <span class="input-group-text bg-body-tertiary">%</span>
+                                </div>
+                                <div class="form-text" style="font-size: 0.72rem;">Reserva para eventuais peças que descolarem ou falharem.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="profitMarginInput" class="form-label small fw-semibold">
+                                    Margem de Lucro Desejada (%)
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" id="profitMarginInput" class="form-control fw-bold text-success" value="100" min="0" max="500">
+                                    <span class="input-group-text bg-body-tertiary">%</span>
+                                </div>
+                                <div class="form-text" style="font-size: 0.72rem;">100% = Dobra o custo total investido.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Painel de Resultados & Orçamento -->
+        <div class="col-lg-5">
+            <div class="sticky-top" style="top: 80px;">
+
+                <!-- Card Principal de Preço de Venda -->
+                <div class="card border-0 bg-success text-white rounded-4 p-4 shadow mb-4 text-center">
+                    <span class="badge bg-white text-success rounded-pill px-3 py-1 fw-semibold small mb-2 mx-auto">
+                        Preço Sugerido de Venda
+                    </span>
+                    <h3 class="display-4 fw-bold mb-0" id="finalPriceDisplay">R$ 48,50</h3>
+                    <p class="text-white-50 small mt-1 mb-3">Valor pronto para apresentar ao cliente</p>
+
+                    <div class="row g-2 pt-3 border-top border-white-50 text-start">
+                        <div class="col-6">
+                            <span class="small text-white-50 d-block">Custo de Produção:</span>
+                            <strong class="fs-6" id="totalCostDisplay">R$ 24,25</strong>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="small text-white-50 d-block">Lucro Líquido Real:</span>
+                            <strong class="fs-6 text-warning" id="netProfitDisplay">R$ 24,25</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalhamento dos Custos -->
+                <div class="card border rounded-4 shadow-sm bg-body p-4 mb-4">
+                    <h4 class="h6 fw-bold mb-3 d-flex align-items-center justify-content-between">
+                        <span>Detalhamento dos Custos:</span>
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill small">Transparência</span>
+                    </h4>
+
+                    <div class="d-flex flex-column gap-2.5 small">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted"><i class="bi bi-layers text-success me-1.5"></i> Filamento Gasto:</span>
+                            <span class="fw-semibold font-monospace" id="costFilament">R$ 5,79</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted"><i class="bi bi-lightning-charge text-warning me-1.5"></i> Energia Elétrica:</span>
+                            <span class="fw-semibold font-monospace" id="costElectricity">R$ 0,47</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted"><i class="bi bi-gear text-secondary me-1.5"></i> Desgaste da Máquina:</span>
+                            <span class="fw-semibold font-monospace" id="costDeprec">R$ 8,54</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted"><i class="bi bi-person text-info me-1.5"></i> Mão de Obra (Acabamento):</span>
+                            <span class="fw-semibold font-monospace" id="costLabor">R$ 7,50</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted"><i class="bi bi-shield-exclamation text-danger me-1.5"></i> Reserva de Risco/Falhas:</span>
+                            <span class="fw-semibold font-monospace" id="costRisk">R$ 1,95</span>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <!-- Indicadores Chave -->
+                    <div class="row g-2 text-center small">
+                        <div class="col-4">
+                            <div class="p-2 bg-body-tertiary rounded-3 border">
+                                <span class="text-muted d-block" style="font-size: 0.7rem;">Custo/g:</span>
+                                <strong id="costPerGram">R$ 0,37</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 bg-body-tertiary rounded-3 border">
+                                <span class="text-muted d-block" style="font-size: 0.7rem;">Custo/Hora:</span>
+                                <strong id="costPerHour">R$ 7,10</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 bg-body-tertiary rounded-3 border">
+                                <span class="text-muted d-block" style="font-size: 0.7rem;">Energia Total:</span>
+                                <strong id="totalKwhDisplay">0.55 kWh</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação Rápida -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success fw-semibold py-2.5 rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2" id="copyWhatsappBtn2">
+                        <i class="bi bi-whatsapp fs-5"></i> <span>Copiar Mensagem p/ WhatsApp</span>
+                    </button>
+                    <button class="btn btn-outline-secondary py-2 rounded-pill d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#customProposalModal">
+                        <i class="bi bi-pencil-square"></i> <span>Personalizar Texto da Proposta</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal de Personalização do Orçamento WhatsApp -->
+<div class="modal fade" id="customProposalModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg bg-body">
+            <div class="modal-header border-bottom py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-whatsapp text-success fs-4"></i>
+                    <h5 class="modal-title fw-bold mb-0">Mensagem para WhatsApp</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label for="clientItemName" class="form-label small fw-semibold">Nome da Peça / Projeto:</label>
+                    <input type="text" id="clientItemName" class="form-control" value="Peça Técnica / Modelo 3D Personalizado">
+                </div>
+                <div class="mb-3">
+                    <label for="clientDeadline" class="form-label small fw-semibold">Prazo de Produção:</label>
+                    <input type="text" id="clientDeadline" class="form-control" value="1 a 2 dias úteis">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Prévia da Mensagem:</label>
+                    <textarea id="whatsappPreviewText" class="form-control font-monospace small bg-light" rows="8" readonly></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2.5">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-success btn-sm rounded-pill px-4" id="copyWhatsappFromModalBtn">
+                    <i class="bi bi-copy me-1"></i> Copiar Mensagem
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de Cópia Sucesso -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="quoteToast" class="toast align-items-center text-bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill fs-5"></i>
+                <div>
+                    <strong>Copiado com Sucesso!</strong>
+                    <div class="small">Orçamento formatado pronto para enviar no WhatsApp.</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/3mf_inspector.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos do DOM
+    const partGramsInput = document.getElementById('partGramsInput');
+    const spoolPriceInput = document.getElementById('spoolPriceInput');
+    const materialTypeSelect = document.getElementById('materialTypeSelect');
+    const printHoursInput = document.getElementById('printHoursInput');
+    const printMinutesInput = document.getElementById('printMinutesInput');
+    const printerModelSelect = document.getElementById('printerModelSelect');
+    const kwhRateInput = document.getElementById('kwhRateInput');
+    const machineDeprecInput = document.getElementById('machineDeprecInput');
+    const laborTimeInput = document.getElementById('laborTimeInput');
+    const laborRateInput = document.getElementById('laborRateInput');
+    const riskMarginInput = document.getElementById('riskMarginInput');
+    const profitMarginInput = document.getElementById('profitMarginInput');
+
+    // Displays
+    const finalPriceDisplay = document.getElementById('finalPriceDisplay');
+    const totalCostDisplay = document.getElementById('totalCostDisplay');
+    const netProfitDisplay = document.getElementById('netProfitDisplay');
+    const costFilamentEl = document.getElementById('costFilament');
+    const costElectricityEl = document.getElementById('costElectricity');
+    const costDeprecEl = document.getElementById('costDeprec');
+    const costLaborEl = document.getElementById('costLabor');
+    const costRiskEl = document.getElementById('costRisk');
+    const costPerGramEl = document.getElementById('costPerGram');
+    const costPerHourEl = document.getElementById('costPerHour');
+    const totalKwhDisplayEl = document.getElementById('totalKwhDisplay');
+    const whatsappPreviewText = document.getElementById('whatsappPreviewText');
+    const clientItemName = document.getElementById('clientItemName');
+    const clientDeadline = document.getElementById('clientDeadline');
+
+    function calculateQuote() {
+        const grams = parseFloat(partGramsInput.value) || 0;
+        const spoolPrice = parseFloat(spoolPriceInput.value) || 0;
+        const hours = parseFloat(printHoursInput.value) || 0;
+        const minutes = parseFloat(printMinutesInput.value) || 0;
+        const totalHours = hours + (minutes / 60);
+        const printerWatts = parseFloat(printerModelSelect.value) || 150;
+        const kwhRate = parseFloat(kwhRateInput.value) || 0.85;
+        const deprecPerHour = parseFloat(machineDeprecInput.value) || 0;
+        const laborMins = parseFloat(laborTimeInput.value) || 0;
+        const laborRate = parseFloat(laborRateInput.value) || 0;
+        const riskPct = parseFloat(riskMarginInput.value) || 0;
+        const profitPct = parseFloat(profitMarginInput.value) || 0;
+
+        // 1. Custo de Filamento
+        const costPerGram = spoolPrice / 1000.0;
+        const costFilament = grams * costPerGram;
+
+        // 2. Custo de Eletricidade
+        const totalKwh = (printerWatts * totalHours) / 1000.0;
+        const costElectricity = totalKwh * kwhRate;
+
+        // 3. Custo de Depreciação / Desgaste
+        const costDeprec = totalHours * deprecPerHour;
+
+        // 4. Custo de Mão de Obra
+        const costLabor = (laborMins / 60.0) * laborRate;
+
+        // Subtotal Direto
+        const directCost = costFilament + costElectricity + costDeprec + costLabor;
+
+        // 5. Reserva de Risco / Falhas
+        const costRisk = directCost * (riskPct / 100.0);
+
+        // Custo Total de Produção
+        const totalProductionCost = directCost + costRisk;
+
+        // 6. Preço Final com Margem de Lucro
+        const netProfit = totalProductionCost * (profitPct / 100.0);
+        const finalPrice = totalProductionCost + netProfit;
+
+        // Custo por grama efetivo e por hora
+        const effectiveCostPerGram = grams > 0 ? (totalProductionCost / grams) : 0;
+        const effectiveCostPerHour = totalHours > 0 ? (totalProductionCost / totalHours) : 0;
+
+        // Atualiza telas
+        finalPriceDisplay.textContent = `R$ ${finalPrice.toFixed(2).replace('.', ',')}`;
+        totalCostDisplay.textContent = `R$ ${totalProductionCost.toFixed(2).replace('.', ',')}`;
+        netProfitDisplay.textContent = `R$ ${netProfit.toFixed(2).replace('.', ',')}`;
+
+        costFilamentEl.textContent = `R$ ${costFilament.toFixed(2).replace('.', ',')}`;
+        costElectricityEl.textContent = `R$ ${costElectricity.toFixed(2).replace('.', ',')}`;
+        costDeprecEl.textContent = `R$ ${costDeprec.toFixed(2).replace('.', ',')}`;
+        costLaborEl.textContent = `R$ ${costLabor.toFixed(2).replace('.', ',')}`;
+        costRiskEl.textContent = `R$ ${costRisk.toFixed(2).replace('.', ',')}`;
+
+        costPerGramEl.textContent = `R$ ${effectiveCostPerGram.toFixed(2).replace('.', ',')}`;
+        costPerHourEl.textContent = `R$ ${effectiveCostPerHour.toFixed(2).replace('.', ',')}`;
+        totalKwhDisplayEl.textContent = `${totalKwh.toFixed(2)} kWh`;
+
+        updateWhatsappText(finalPrice, grams, totalHours);
+    }
+
+    function updateWhatsappText(finalPrice, grams, totalHours) {
+        const item = clientItemName.value || "Peça Impressa em 3D";
+        const deadline = clientDeadline.value || "1 a 2 dias úteis";
+        const materialText = materialTypeSelect.options[materialTypeSelect.selectedIndex].text.split('(')[0].trim();
+
+        const h = Math.floor(totalHours);
+        const m = Math.round((totalHours - h) * 60);
+        const timeStr = h > 0 ? `${h}h ${m}m` : `${m}min`;
+
+        const msg = `Olá! Segue o orçamento para a sua impressão 3D:
+
+📦 *Item:* ${item}
+🧵 *Material:* ${materialText} de alta qualidade
+⚖️ *Peso Estimado:* ${grams}g
+⏱️ *Tempo de Impressão:* ~${timeStr}
+⏳ *Prazo de Produção:* ${deadline}
+
+💰 *Valor Total:* R$ ${finalPrice.toFixed(2).replace('.', ',')}
+💳 *Pagamento:* PIX / Cartão
+
+Impresso com alta precisão e calibração técnica Bambu Lab. Qualquer dúvida fico à disposição!`.trim();
+
+        whatsappPreviewText.value = msg;
+    }
+
+    // Ouvintes de input para recálculo automático
+    [
+        partGramsInput, spoolPriceInput, materialTypeSelect, printHoursInput,
+        printMinutesInput, printerModelSelect, kwhRateInput, machineDeprecInput,
+        laborTimeInput, laborRateInput, riskMarginInput, profitMarginInput,
+        clientItemName, clientDeadline
+    ].forEach(el => {
+        el.addEventListener('input', calculateQuote);
+        el.addEventListener('change', calculateQuote);
+    });
+
+    // Presets Rápidos de Precificação
+    document.querySelectorAll('.quote-preset-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.quote-preset-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            profitMarginInput.value = this.dataset.margin;
+            riskMarginInput.value = this.dataset.risk;
+            laborTimeInput.value = this.dataset.labor;
+            machineDeprecInput.value = this.dataset.deprec;
+            calculateQuote();
+        });
+    });
+
+    // Copiar WhatsApp
+    function copyWhatsapp() {
+        navigator.clipboard.writeText(whatsappPreviewText.value).then(() => {
+            const toast = new bootstrap.Toast(document.getElementById('quoteToast'));
+            toast.show();
+        });
+    }
+
+    document.getElementById('copyWhatsappBtn').addEventListener('click', copyWhatsapp);
+    document.getElementById('copyWhatsappBtn2').addEventListener('click', copyWhatsapp);
+    document.getElementById('copyWhatsappFromModalBtn').addEventListener('click', () => {
+        copyWhatsapp();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('customProposalModal'));
+        if (modal) modal.hide();
+    });
+
+    // Integração com o Leitor de 3MF
+    const fileInput3mf = document.getElementById('fileInput3mf');
+    fileInput3mf.addEventListener('change', async function() {
+        if (!this.files || this.files.length === 0) return;
+        const file = this.files[0];
+
+        try {
+            const data = await window.bambu3MFInspector.inspect(file);
+            if (data.totalWeightGrams > 0) {
+                partGramsInput.value = data.totalWeightGrams;
+            }
+            if (data.printTimeHours > 0 || data.printTimeMinutes > 0) {
+                printHoursInput.value = data.printTimeHours;
+                printMinutesInput.value = data.printTimeMinutes;
+            }
+            if (data.filaments && data.filaments.length > 0) {
+                const firstFil = data.filaments[0].type.toLowerCase();
+                if (firstFil.includes('petg')) materialTypeSelect.value = 'petg';
+                else if (firstFil.includes('tpu')) materialTypeSelect.value = 'tpu';
+                else if (firstFil.includes('abs') || firstFil.includes('asa')) materialTypeSelect.value = 'abs_asa';
+                else materialTypeSelect.value = 'pla';
+            }
+
+            // Exibe banner de arquivo 3mf
+            const banner = document.getElementById('loaded3mfInfo');
+            banner.classList.remove('d-none');
+            document.getElementById('loaded3mfFileName').textContent = data.fileName;
+            document.getElementById('loaded3mfDetails').textContent = `${data.totalWeightGrams}g • ${data.printTimeFormatted} • ${data.filaments.length} cor(es)`;
+
+            if (data.thumbnailUrl) {
+                const thumb = document.getElementById('plateThumbnail');
+                thumb.src = data.thumbnailUrl;
+                thumb.classList.remove('d-none');
+            }
+
+            clientItemName.value = data.fileName.replace(/\.3mf$/i, '');
+            calculateQuote();
+        } catch (err) {
+            console.error('Erro ao ler .3mf:', err);
+            alert('Não foi possível ler os metadados do arquivo .3mf. Certifique-se de que é um arquivo fatiado pelo Bambu Studio.');
+        }
+    });
+
+    // Cálculo inicial
+    calculateQuote();
+});
+</script>
+{% endblock %}

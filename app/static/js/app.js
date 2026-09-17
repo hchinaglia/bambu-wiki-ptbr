@@ -332,6 +332,24 @@ function sendDrawerPrompt(text) {
     }
 }
 
+// Abre a gaveta de chat e preenche com contexto do artigo para tirar dúvida
+window.askArticleDoubt = function(title, path) {
+    const drawerEl = document.getElementById("aiChatDrawer");
+    if (drawerEl && window.bootstrap && window.bootstrap.Offcanvas) {
+        const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawerEl);
+        offcanvas.show();
+    }
+    const input = document.getElementById("drawerChatInput");
+    if (input) {
+        const prompt = `Olá! Gostaria de tirar uma dúvida sobre o procedimento "${title}": `;
+        input.value = prompt;
+        setTimeout(() => {
+            input.focus();
+            input.setSelectionRange(prompt.length, prompt.length);
+        }, 350);
+    }
+};
+
 async function handleDrawerChatSubmit(e) {
     e.preventDefault();
     const input = document.getElementById("drawerChatInput");

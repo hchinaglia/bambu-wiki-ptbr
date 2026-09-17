@@ -1,0 +1,274 @@
+{% extends "layout.html" %}
+
+{% block title %}Guia Visual de Diagnóstico de Falhas de Impressão 3D — Wiki Bambu Lab{% endblock %}
+{% block description %}Atlas visual com os 14 maiores defeitos de impressão 3D (stringing, warping, subextrusão, layer shift) e o passo a passo exato de correção no Bambu Studio.{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-0 px-lg-3">
+
+    <!-- Hero Header -->
+    <div class="card border-0 bg-danger-subtle border border-danger-subtle rounded-4 p-4 p-lg-4.5 mb-4 shadow-xs">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-danger text-white rounded-pill px-3 py-1 fw-semibold small">
+                        <i class="bi bi-heart-pulse me-1"></i> Troubleshooting Visual
+                    </span>
+                    <span class="badge bg-white text-danger border border-danger-subtle rounded-pill px-2.5 py-1 small">
+                        14 Falhas Catalogadas
+                    </span>
+                </div>
+                <h1 class="h3 fw-bold mb-1 text-danger-emphasis">Guia Visual de Diagnóstico de Falhas</h1>
+                <p class="text-muted small mb-0">
+                    Sua impressão deu errado? Identifique visualmente o problema abaixo, descubra a causa raiz e saiba exatamente quais botões alterar no Bambu Studio.
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/chat?q=Como+fazer+o+diagnostico+completo+de+uma+peca+com+defeito+de+impressao%3F" class="btn btn-danger btn-sm rounded-pill px-3.5 fw-semibold d-flex align-items-center gap-1.5 shadow-xs">
+                    <i class="bi bi-robot"></i> <span>Diagnosticar com Foto (IA)</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros por Categoria & Busca -->
+    <div class="card border rounded-4 p-3 mb-4 shadow-xs bg-body">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-body-tertiary border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="defectSearchInput" class="form-control border-start-0" placeholder="Buscar defeito (ex: teias, descolamento, furos, linhas)...">
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="d-flex flex-wrap gap-1.5 justify-content-md-end" id="categoryFilterContainer">
+                    <button class="btn btn-sm btn-dark rounded-pill category-filter-btn active" data-cat="all">Todas (14)</button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill category-filter-btn" data-cat="adesao">Adesão de Mesa</button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill category-filter-btn" data-cat="extrusao">Extrusão & Bico</button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill category-filter-btn" data-cat="mecanica">Mecânica</button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill category-filter-btn" data-cat="superficie">Superfície</button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill category-filter-btn" data-cat="temperatura">Temperatura</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de Cards de Defeitos -->
+    <div class="row g-3 mb-5" id="defectsGrid">
+        {% for d in defects %}
+        <div class="col-md-6 col-xl-4 defect-card-col" data-cat="{{ d.category }}" data-name="{{ d.name | lower }}" data-summary="{{ d.summary | lower }}">
+            <div class="card border rounded-4 h-100 shadow-sm bg-body transition-all hover-shadow overflow-hidden d-flex flex-column">
+                <div class="card-header bg-body border-bottom py-3 px-3.5 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle bg-{{ d.badge_color }}-subtle text-{{ d.badge_color }} p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i class="bi {{ d.icon }} fs-5"></i>
+                        </div>
+                        <span class="badge bg-body-secondary text-body-secondary rounded-pill small" style="font-size: 0.7rem;">
+                            {{ d.category_name }}
+                        </span>
+                    </div>
+                    <span class="badge bg-{{ d.badge_color }}-subtle text-{{ d.badge_color }} border border-{{ d.badge_color }}-subtle rounded-pill px-2.5 py-1 small">
+                        {{ d.severity }}
+                    </span>
+                </div>
+                <div class="card-body p-3.5 d-flex flex-column justify-content-between flex-grow-1">
+                    <div>
+                        <h2 class="h6 fw-bold mb-1.5 text-body">{{ d.name }}</h2>
+                        <p class="text-muted small mb-3" style="font-size: 0.82rem; line-height: 1.45;">
+                            {{ d.summary }}
+                        </p>
+                        <div class="p-2.5 bg-body-tertiary rounded-3 border mb-3">
+                            <span class="small fw-bold text-uppercase d-block mb-1 text-secondary" style="font-size: 0.68rem;">
+                                <i class="bi bi-exclamation-triangle text-warning me-1"></i> Principais Causas:
+                            </span>
+                            <ul class="list-unstyled mb-0 small text-muted" style="font-size: 0.78rem;">
+                                {% for cause in d.causes[:2] %}
+                                <li class="text-truncate">• {{ cause }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 pt-2 border-top">
+                        <button class="btn btn-outline-primary btn-sm flex-grow-1 view-defect-btn d-flex align-items-center justify-content-center gap-1.5"
+                                data-id="{{ d.id }}"
+                                data-name="{{ d.name }}"
+                                data-cat="{{ d.category_name }}"
+                                data-summary="{{ d.summary }}"
+                                data-causes='{{ d.causes | tojson }}'
+                                data-fixes='{{ d.bambu_studio_fixes | tojson }}'
+                                data-wikilink="{{ d.wiki_link }}"
+                                data-prompt="{{ d.quick_prompt }}">
+                            <i class="bi bi-eye"></i> <span>Como Resolver</span>
+                        </button>
+                        <a href="/chat?q={{ d.quick_prompt | urlencode }}" class="btn btn-outline-success btn-sm d-flex align-items-center gap-1" title="Perguntar à IA">
+                            <i class="bi bi-robot"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Estado Vazio de Busca -->
+    <div id="noDefectsFound" class="card border rounded-4 p-5 text-center bg-body d-none my-4">
+        <div class="rounded-circle bg-secondary-subtle text-secondary p-3 d-inline-flex mx-auto mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-search fs-3"></i>
+        </div>
+        <h5 class="fw-bold mb-1">Nenhum defeito encontrado</h5>
+        <p class="text-muted small mb-3">Tente buscar por termos como "teias", "descolamento", "mesa" ou "bico".</p>
+        <button class="btn btn-sm btn-outline-primary rounded-pill px-3.5 mx-auto" id="resetDefectFiltersBtn">Limpar Filtros</button>
+    </div>
+
+</div>
+
+<!-- Modal Detalhada de Resolução do Defeito -->
+<div class="modal fade" id="defectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg bg-body">
+            <div class="modal-header border-bottom py-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-danger-subtle text-danger p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-wrench-adjustable fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalDefectTitle">Nome do Defeito</h5>
+                        <span class="text-muted small" id="modalDefectCat">Categoria</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+
+                <!-- O que é -->
+                <div class="mb-3.5">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill small mb-1">Diagnóstico</span>
+                    <p class="text-body mb-0 small" id="modalDefectSummary" style="font-size: 0.9rem;"></p>
+                </div>
+
+                <!-- Causas -->
+                <div class="p-3 bg-body-tertiary rounded-3 border mb-3.5">
+                    <h6 class="fw-bold small text-uppercase text-danger mb-2">
+                        <i class="bi bi-exclamation-octagon-fill me-1"></i> Por que isso acontece?
+                    </h6>
+                    <ul class="mb-0 small text-muted ps-3" id="modalDefectCauses"></ul>
+                </div>
+
+                <!-- Ajustes no Bambu Studio -->
+                <div class="p-3.5 bg-success-subtle border border-success-subtle rounded-3 mb-3.5">
+                    <h6 class="fw-bold small text-uppercase text-success-emphasis mb-2 d-flex align-items-center gap-1.5">
+                        <i class="bi bi-sliders fs-5"></i> O que alterar no Bambu Studio agora:
+                    </h6>
+                    <ul class="mb-0 small text-body ps-3 fw-medium" id="modalDefectFixes"></ul>
+                </div>
+
+            </div>
+            <div class="modal-footer border-top py-2.5 px-4 d-flex justify-content-between">
+                <a href="#" id="modalWikiLink" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="bi bi-book me-1"></i> Ver Guia Técnico Completo
+                </a>
+                <div class="d-flex gap-2">
+                    <a href="#" id="modalChatAiLink" class="btn btn-success btn-sm rounded-pill px-3.5 fw-semibold d-flex align-items-center gap-1.5">
+                        <i class="bi bi-robot"></i> <span>Tirar Dúvida com IA</span>
+                    </a>
+                    <button type="button" class="btn btn-light border btn-sm rounded-pill px-3" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('defectSearchInput');
+    const filterButtons = document.querySelectorAll('.category-filter-btn');
+    const defectCards = document.querySelectorAll('.defect-card-col');
+    const noDefectsFound = document.getElementById('noDefectsFound');
+    const resetBtn = document.getElementById('resetDefectFiltersBtn');
+
+    let activeCategory = 'all';
+    let searchQuery = '';
+
+    function applyFilters() {
+        let visibleCount = 0;
+        defectCards.forEach(card => {
+            const cardCat = card.dataset.cat;
+            const name = card.dataset.name;
+            const summary = card.dataset.summary;
+
+            const matchesCat = (activeCategory === 'all' || cardCat === activeCategory);
+            const matchesSearch = !searchQuery || name.includes(searchQuery) || summary.includes(searchQuery);
+
+            if (matchesCat && matchesSearch) {
+                card.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                card.classList.add('d-none');
+            }
+        });
+
+        if (visibleCount === 0) {
+            noDefectsFound.classList.remove('d-none');
+        } else {
+            noDefectsFound.classList.add('d-none');
+        }
+    }
+
+    searchInput.addEventListener('input', function() {
+        searchQuery = this.value.trim().toLowerCase();
+        applyFilters();
+    });
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterButtons.forEach(b => {
+                b.classList.remove('active', 'btn-dark');
+                b.classList.add('btn-outline-secondary');
+            });
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('active', 'btn-dark');
+
+            activeCategory = this.dataset.cat;
+            applyFilters();
+        });
+    });
+
+    resetBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        searchQuery = '';
+        filterButtons[0].click();
+    });
+
+    // Modal de Detalhes do Defeito
+    const defectModal = new bootstrap.Modal(document.getElementById('defectModal'));
+    const modalTitle = document.getElementById('modalDefectTitle');
+    const modalCat = document.getElementById('modalDefectCat');
+    const modalSummary = document.getElementById('modalDefectSummary');
+    const modalCauses = document.getElementById('modalDefectCauses');
+    const modalFixes = document.getElementById('modalDefectFixes');
+    const modalWikiLink = document.getElementById('modalWikiLink');
+    const modalChatAiLink = document.getElementById('modalChatAiLink');
+
+    document.querySelectorAll('.view-defect-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            modalTitle.textContent = this.dataset.name;
+            modalCat.textContent = this.dataset.cat;
+            modalSummary.textContent = this.dataset.summary;
+
+            const causes = JSON.parse(this.dataset.causes || '[]');
+            modalCauses.innerHTML = causes.map(c => `<li class="mb-1.5">${c}</li>`).join('');
+
+            const fixes = JSON.parse(this.dataset.fixes || '[]');
+            modalFixes.innerHTML = fixes.map(f => `<li class="mb-2">${f}</li>`).join('');
+
+            modalWikiLink.href = this.dataset.wikilink || '/calculadora';
+            modalChatAiLink.href = `/chat?q=${encodeURIComponent(this.dataset.prompt)}`;
+
+            defectModal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

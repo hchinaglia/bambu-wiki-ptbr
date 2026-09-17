@@ -29,7 +29,12 @@ from app.filament_colors import (
     match_color_to_filaments,
     infer_material_recommendation,
 )
-from app.studio_calculator import calculate_slicing_profile
+from app.studio_calculator import (
+    calculate_slicing_profile,
+    generate_bambu_studio_json_config,
+)
+from app.troubleshooting_data import get_all_defects, get_defect_by_id
+from app.maintenance_data import MAINTENANCE_PRINTERS, get_all_maintenance_tasks
 
 app = FastAPI(
     title="Wiki Bambu Lab PT-BR",
@@ -334,14 +339,14 @@ async def calculator_page(request: Request):
 
 @app.get("/api/calculadora")
 async def api_calculator(
-    printer: str = Query("p1s"),
-    nozzle_size: float = Query(0.4),
-    nozzle_material: str = Query("hardened"),
-    filament: str = Query("pla-basic"),
-    objective: str = Query("balanced"),
-    plate: str = Query("textured_pei"),
-    enable_support: bool = Query(False),
-    support_type: str = Query("tree"),
+    printer: str = "p1s",
+    nozzle_size: float = 0.4,
+    nozzle_material: str = "hardened",
+    filament: str = "pla-basic",
+    objective: str = "balanced",
+    plate: str = "textured_pei",
+    enable_support: bool = False,
+    support_type: str = "tree",
 ):
     """Endpoint JSON da API para cálculo instantâneo de parâmetros do Bambu Studio."""
     profile = calculate_slicing_profile(
@@ -354,7 +359,59 @@ async def api_calculator(
         enable_support=enable_support,
         support_type=support_type,
     )
+    profile["bambu_studio_json"] = generate_bambu_studio_json_config(profile)
     return JSONResponse(profile)
+
+
+@app.get("/orcamento", response_class=HTMLResponse)
+async def quote_calculator_page(request: Request):
+    """Página da Calculadora de Orçamento & Lucro de Impressão 3D."""
+    return templates.TemplateResponse(
+        request=request,
+        name="quote_calculator.html",
+        context={
+            "request": request,
+            "nav_tree": get_navigation_tree(),
+            "active_path": "orcamento",
+        }
+    )
+
+
+@app.get("/falhas", response_class=HTMLResponse)
+async def troubleshooting_page(request: Request):
+    """Página do Guia Visual de Diagnóstico de Falhas de Impressão."""
+    return templates.TemplateResponse(
+        request=request,
+        name="troubleshooting.html",
+        context={
+            "request": request,
+            "nav_tree": get_navigation_tree(),
+            "active_path": "falhas",
+            "defects": get_all_defects(),
+        }
+    )
+
+
+@app.get("/api/falhas")
+async def api_troubleshooting():
+    """Endpoint JSON com a lista de todos os defeitos catalogados."""
+    return JSONResponse(get_all_defects())
+
+
+@app.get("/manutencao", response_class=HTMLResponse)
+async def maintenance_page(request: Request):
+    """Página do Painel de Manutenção Preventiva da Máquina."""
+    return templates.TemplateResponse(
+        request=request,
+        name="maintenance.html",
+        context={
+            "request": request,
+            "nav_tree": get_navigation_tree(),
+            "active_path": "manutencao",
+            "printers": MAINTENANCE_PRINTERS,
+            "tasks": get_all_maintenance_tasks(),
+        }
+    )
 
 
 @app.get("/cores", response_class=HTMLResponse)

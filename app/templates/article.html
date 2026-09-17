@@ -77,8 +77,24 @@
                 {{ article.html_content | safe }}
             </div>
 
+            <!-- Banner de Ajuda da IA no final do artigo -->
+            <div class="p-3.5 bg-success-subtle border border-success-subtle rounded-4 mt-4 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 shadow-xs">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-success text-white p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                        <i class="bi bi-robot fs-4"></i>
+                    </div>
+                    <div>
+                        <strong class="text-success-emphasis d-block mb-0.5">Ficou com dúvida neste procedimento?</strong>
+                        <span class="text-muted small">O assistente IA pode explicar o passo a passo com base exatamente neste artigo.</span>
+                    </div>
+                </div>
+                <button class="btn btn-success btn-sm fw-semibold rounded-pill px-3.5 flex-shrink-0 shadow-xs" onclick="askArticleDoubt({{ article.title | tojson }}, {{ article.path | tojson }})">
+                    <i class="bi bi-chat-dots me-1"></i> Tirar Dúvida com IA
+                </button>
+            </div>
+
             <!-- Rodapé do Artigo -->
-            <footer class="article-footer border-top pt-4 mt-5 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <footer class="article-footer border-top pt-4 mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <a href="/wiki/{{ article.section }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i> Mais guias de {{ section_info.name }}
                 </a>
@@ -131,6 +147,22 @@
             {% else %}
             <p class="text-muted small mb-0">Artigo em seção única.</p>
             {% endif %}
+
+            <!-- Widget IA: Tirar Dúvida sobre este Artigo -->
+            <div class="card bg-success-subtle border border-success-subtle rounded-3 p-3 mt-3 shadow-xs">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="rounded-circle bg-success text-white p-1.5 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                        <i class="bi bi-robot fs-6"></i>
+                    </div>
+                    <strong class="text-success-emphasis small">Dúvida neste manual?</strong>
+                </div>
+                <p class="text-muted small mb-2.5" style="font-size: 0.78rem; line-height: 1.4;">
+                    Pergunte ao Especialista IA com o contexto específico deste artigo pré-carregado.
+                </p>
+                <button class="btn btn-sm btn-success fw-semibold w-100 d-flex align-items-center justify-content-center gap-1.5 rounded-pill shadow-xs" onclick="askArticleDoubt({{ article.title | tojson }}, {{ article.path | tojson }})">
+                    <i class="bi bi-chat-dots"></i> Tirar Dúvida com IA
+                </button>
+            </div>
 
             <hr class="my-3">
             <div class="d-grid gap-2">

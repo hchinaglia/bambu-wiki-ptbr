@@ -338,6 +338,7 @@
 </div>
 
 <!-- Scripts de Processamento de Imagem & Paleta -->
+<script src="/static/js/3mf_inspector.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('fileInput');
@@ -353,29 +354,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const itemDescriptionInput = document.getElementById('itemDescriptionInput');
     const colorLoupe = document.getElementById('colorLoupe');
     const nativeEyeDropperBtn = document.getElementById('nativeEyeDropperBtn');
+    const resultsSection = document.getElementById('resultsSection');
 
-    let currentColors = [];
     let currentImageBase64 = null;
     let currentMimeType = "image/png";
+    let detectedColors = [];
+    let currentColors = detectedColors;
+    let isEyedropperActive = false;
+
+    function renderDetectedColorBadges() {
+        currentColors = detectedColors;
+        renderPaletteSwatches();
+    }
+
+    function runAnalysis() {
+        analyzeBtn.click();
+    }
 
     // 1. Eventos de Drag & Drop
-    ['dragenter', 'dragover'].forEach(name => {
-        dropZone.addEventListener(name, (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-success', 'bg-success-subtle');
-        });
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
     });
 
-    ['dragleave', 'drop'].forEach(name => {
-        dropZone.addEventListener(name, (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-success', 'bg-success-subtle');
-        });
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('border-warning', 'bg-warning-subtle'));
     });
 
-    dropZone.addEventListener('drop', (e) => {
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            handleFile(e.dataTransfer.files[0]);
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-warning', 'bg-warning-subtle'));
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+            handleFile(files[0]);
         }
     });
 
@@ -396,9 +414,52 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleFile(file) {
         if (!file) return;
 
-        if (file.name.endsWith('.stl') || file.name.endsWith('.3mf')) {
+        // Suporte a arquivos 3MF fatiados no Bambu Studio
+        if (file.name.toLowerCase().endsWith('.3mf')) {
+            itemDescriptionInput.value = `Bambu Studio: ${file.name}`;
+            window.bambu3MFInspector.inspect(file).then(data => {
+                itemDescriptionInput.value = `Bambu Studio: ${data.fileName} (${data.printTimeFormatted}, ${data.totalWeightGrams}g)`;
+                
+                if (data.filaments && data.filaments.length > 0) {
+                    detectedColors = data.filaments.map(f => f.color);
+                    currentColors = detectedColors;
+                    renderDetectedColorBadges();
+                }
+
+                if (data.thumbnailUrl) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const maxDim = 800;
+                        let w = img.width, h = img.height;
+                        if (w > maxDim || h > maxDim) {
+                            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                        }
+                        imageCanvas.width = w;
+                        imageCanvas.height = h;
+                        ctx.drawImage(img, 0, 0, w, h);
+                        previewContainer.classList.remove('d-none');
+                        currentImageBase64 = imageCanvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+                        currentMimeType = "image/jpeg";
+                        if (!detectedColors || detectedColors.length === 0) {
+                            extractDominantColors(ctx, w, h);
+                        } else {
+                            runAnalysis();
+                        }
+                    };
+                    img.src = data.thumbnailUrl;
+                } else if (detectedColors && detectedColors.length > 0) {
+                    runAnalysis();
+                }
+            }).catch(err => {
+                console.error("Erro ao ler .3mf:", err);
+            });
+            return;
+        }
+
+        if (file.name.toLowerCase().endsWith('.stl')) {
             itemDescriptionInput.value = `Modelo 3D (${file.name})`;
-            alert(`Arquivo 3D detectado: ${file.name}. Como arquivos 3D puros contêm geometria, para melhor resultado de cores você também pode subir um render ou screenshot do modelo pintado.`);
+            alert(`Arquivo STL detectado: ${file.name}. Arquivos STL não possuem cores embutidas. Para obter cores e fatiamento exato, você pode subir o arquivo .3mf do Bambu Studio ou uma captura do modelo pintado.`);
         }
 
         currentMimeType = file.type || "image/png";

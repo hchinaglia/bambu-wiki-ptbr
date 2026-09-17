@@ -1,0 +1,310 @@
+{% extends "layout.html" %}
+
+{% block title %}Painel de Manutenção Preventiva — Wiki Bambu Lab{% endblock %}
+{% block description %}Checklist oficial de manutenção periódica para impressoras Bambu Lab (X1, P1S, A1, AMS) com registro de datas e alertas de lubrificação.{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-0 px-lg-3">
+
+    <!-- Hero Header -->
+    <div class="card border-0 bg-warning-subtle border border-warning-subtle rounded-4 p-4 p-lg-4.5 mb-4 shadow-xs">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-semibold small">
+                        <i class="bi bi-tools me-1"></i> Manutenção Periódica Oficial
+                    </span>
+                    <span class="badge bg-white text-dark border border-warning-subtle rounded-pill px-2.5 py-1 small">
+                        Registro Local (localStorage)
+                    </span>
+                </div>
+                <h1 class="h3 fw-bold mb-1 text-body-emphasis">Caderno de Manutenção Preventiva</h1>
+                <p class="text-muted small mb-0">
+                    Sua impressora dura anos com precisão impecável quando mantida em dia. Acompanhe os ciclos de lubrificação, limpeza e trocas recomendadas pela Bambu Lab.
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="resetHistoryBtn" title="Limpar histórico gravado">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Resetar Histórico
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo de Status Geral -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border rounded-4 p-3 bg-body shadow-xs text-center">
+                <span class="small text-muted text-uppercase d-block mb-1" style="font-size: 0.7rem;">Total de Tarefas</span>
+                <strong class="fs-4 text-body" id="totalTasksCount">0</strong>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border rounded-4 p-3 bg-body shadow-xs text-center">
+                <span class="small text-success text-uppercase d-block mb-1" style="font-size: 0.7rem;">
+                    <i class="bi bi-check-circle-fill me-1"></i> Em Dia
+                </span>
+                <strong class="fs-4 text-success" id="okTasksCount">0</strong>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border rounded-4 p-3 bg-body shadow-xs text-center">
+                <span class="small text-warning text-uppercase d-block mb-1" style="font-size: 0.7rem;">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Próximo do Prazo
+                </span>
+                <strong class="fs-4 text-warning" id="warningTasksCount">0</strong>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border rounded-4 p-3 bg-body shadow-xs text-center">
+                <span class="small text-danger text-uppercase d-block mb-1" style="font-size: 0.7rem;">
+                    <i class="bi bi-alarm-fill me-1"></i> Atrasadas / Pendentes
+                </span>
+                <strong class="fs-4 text-danger" id="dangerTasksCount">0</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Seleção de Modelo de Impressora -->
+    <div class="card border rounded-4 p-3 mb-4 shadow-xs bg-body">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-printer text-muted fs-5"></i>
+                <span class="fw-semibold small text-body">Selecione seu Equipamento:</span>
+            </div>
+            <div class="d-flex flex-wrap gap-1.5" id="printerFilterButtons">
+                {% for p in printers %}
+                <button class="btn btn-sm {% if loop.first %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill printer-filter-btn" data-printer="{{ p.id }}">
+                    {{ p.name }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Tarefas de Manutenção -->
+    <div class="row g-4 mb-5" id="tasksContainer">
+        {% for task in tasks %}
+        <div class="col-lg-6 task-card-col" data-printers='{{ task.printers | tojson }}' data-taskid="{{ task.id }}" data-freq="{{ task.frequency_days }}">
+            <div class="card border rounded-4 shadow-sm bg-body h-100 d-flex flex-column overflow-hidden">
+                <!-- Cabeçalho da Tarefa -->
+                <div class="card-header bg-body border-bottom py-3 px-3.5 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill small">
+                            {{ task.category }}
+                        </span>
+                        <span class="text-muted small" style="font-size: 0.75rem;">
+                            <i class="bi bi-stopwatch me-1"></i> {{ task.difficulty }}
+                        </span>
+                    </div>
+                    <span class="badge rounded-pill px-3 py-1.5 small task-status-badge" id="badge_{{ task.id }}">
+                        Carregando...
+                    </span>
+                </div>
+
+                <!-- Corpo da Tarefa -->
+                <div class="card-body p-3.5 flex-grow-1 d-flex flex-column justify-content-between">
+                    <div>
+                        <h2 class="h6 fw-bold text-body mb-2">{{ task.title }}</h2>
+                        <div class="small text-muted mb-2.5">
+                            <i class="bi bi-calendar-check text-primary me-1"></i> <strong>Frequência:</strong> {{ task.frequency_label }}
+                        </div>
+                        <div class="small text-muted mb-3">
+                            <i class="bi bi-wrench text-secondary me-1"></i> <strong>Material Necessário:</strong> {{ task.tools_needed }}
+                        </div>
+
+                        {% if task.critical_alert %}
+                        <div class="alert alert-danger border-0 rounded-3 small p-2.5 mb-3" style="font-size: 0.78rem;">
+                            {{ task.critical_alert }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Passo a Passo Expansível -->
+                        <div class="mb-3">
+                            <button class="btn btn-sm btn-light border w-100 text-start d-flex justify-content-between align-items-center py-2 px-3 rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#steps_{{ task.id }}">
+                                <span class="small fw-semibold"><i class="bi bi-list-ol me-1 text-primary"></i> Ver Passo a Passo Oficial</span>
+                                <i class="bi bi-chevron-down small text-muted"></i>
+                            </button>
+                            <div class="collapse mt-2" id="steps_{{ task.id }}">
+                                <div class="p-3 bg-body-tertiary rounded-3 border small">
+                                    <ol class="mb-0 ps-3">
+                                        {% for step in task.steps %}
+                                        <li class="mb-1.5">{{ step }}</li>
+                                        {% endfor %}
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rodapé com Ações -->
+                    <div class="pt-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="small text-muted" id="lastDone_{{ task.id }}" style="font-size: 0.75rem;">
+                            Nunca realizado
+                        </div>
+                        <div class="d-flex gap-1.5">
+                            <a href="/chat?q=Como+fazer+o+procedimento+de+{{ task.title | urlencode }}%3F" class="btn btn-outline-success btn-sm rounded-pill d-flex align-items-center gap-1" title="Tirar Dúvida com IA">
+                                <i class="bi bi-robot"></i> <span class="d-none d-sm-inline">Dúvida</span>
+                            </a>
+                            <button class="btn btn-success btn-sm rounded-pill px-3 fw-semibold mark-done-btn" data-taskid="{{ task.id }}" data-freq="{{ task.frequency_days }}">
+                                <i class="bi bi-check-lg me-1"></i> Marcar Feito Hoje
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<!-- Toast Sucesso -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="maintToast" class="toast align-items-center text-bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill fs-5"></i>
+                <div>
+                    <strong>Manutenção Registrada!</strong>
+                    <div class="small">Data salva no seu computador e contagem regressiva atualizada.</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const STORAGE_KEY = 'bambu_wiki_maintenance_log_v1';
+    let maintenanceLog = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+    const printerButtons = document.querySelectorAll('.printer-filter-btn');
+    const taskCards = document.querySelectorAll('.task-card-col');
+    const totalCountEl = document.getElementById('totalTasksCount');
+    const okCountEl = document.getElementById('okTasksCount');
+    const warningCountEl = document.getElementById('warningTasksCount');
+    const dangerCountEl = document.getElementById('dangerTasksCount');
+    const resetHistoryBtn = document.getElementById('resetHistoryBtn');
+
+    let activePrinter = 'all';
+
+    function refreshStatuses() {
+        const now = new Date();
+        let total = 0;
+        let ok = 0;
+        let warning = 0;
+        let danger = 0;
+
+        taskCards.forEach(card => {
+            const taskId = card.dataset.taskid;
+            const freqDays = parseInt(card.dataset.freq, 10);
+            const badge = document.getElementById(`badge_${taskId}`);
+            const lastDoneEl = document.getElementById(`lastDone_${taskId}`);
+
+            const lastDoneIso = maintenanceLog[taskId];
+            let status = 'danger'; // 'ok', 'warning', 'danger'
+            let daysRemaining = -999;
+
+            if (lastDoneIso) {
+                const lastDate = new Date(lastDoneIso);
+                const diffTime = Math.abs(now - lastDate);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                daysRemaining = freqDays - diffDays;
+
+                const dateStr = lastDate.toLocaleDateString('pt-BR');
+                lastDoneEl.innerHTML = `<i class="bi bi-clock-history me-1"></i> Feito em <strong>${dateStr}</strong> (${diffDays} dias atrás)`;
+
+                if (daysRemaining > 7) {
+                    status = 'ok';
+                    badge.className = 'badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 small task-status-badge';
+                    badge.innerHTML = `<i class="bi bi-check2 me-1"></i> Em Dia (${daysRemaining} dias restam)`;
+                } else if (daysRemaining >= 0) {
+                    status = 'warning';
+                    badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-1.5 small task-status-badge';
+                    badge.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i> Vence em ${daysRemaining} dias`;
+                } else {
+                    status = 'danger';
+                    const overdue = Math.abs(daysRemaining);
+                    badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1.5 small task-status-badge';
+                    badge.innerHTML = `<i class="bi bi-alarm me-1"></i> Atrasado há ${overdue} dias`;
+                }
+            } else {
+                status = 'danger';
+                badge.className = 'badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1.5 small task-status-badge';
+                badge.innerHTML = `<i class="bi bi-dash-circle me-1"></i> Nunca Registrado`;
+                lastDoneEl.innerHTML = `<i class="bi bi-clock-history me-1"></i> Nenhum registro gravado`;
+            }
+
+            // Apenas contabiliza tarefas visíveis para a impressora selecionada
+            if (!card.classList.contains('d-none')) {
+                total++;
+                if (status === 'ok') ok++;
+                else if (status === 'warning') warning++;
+                else danger++;
+            }
+        });
+
+        totalCountEl.textContent = total;
+        okCountEl.textContent = ok;
+        warningCountEl.textContent = warning;
+        dangerCountEl.textContent = danger;
+    }
+
+    // Filtragem por impressora
+    function filterPrinter(printerId) {
+        activePrinter = printerId;
+        taskCards.forEach(card => {
+            const printers = JSON.parse(card.dataset.printers || '[]');
+            if (printerId === 'all' || printers.includes(printerId) || printers.includes('all')) {
+                card.classList.remove('d-none');
+            } else {
+                card.classList.add('d-none');
+            }
+        });
+        refreshStatuses();
+    }
+
+    printerButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            printerButtons.forEach(b => {
+                b.classList.remove('btn-dark');
+                b.classList.add('btn-outline-secondary');
+            });
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-dark');
+
+            filterPrinter(this.dataset.printer);
+        });
+    });
+
+    // Marcar como Feito Hoje
+    document.querySelectorAll('.mark-done-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const taskId = this.dataset.taskid;
+            maintenanceLog[taskId] = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(maintenanceLog));
+
+            refreshStatuses();
+
+            const toast = new bootstrap.Toast(document.getElementById('maintToast'));
+            toast.show();
+        });
+    });
+
+    // Resetar Histórico
+    resetHistoryBtn.addEventListener('click', function() {
+        if (confirm('Deseja realmente limpar todo o histórico de manutenções registradas neste navegador?')) {
+            maintenanceLog = {};
+            localStorage.removeItem(STORAGE_KEY);
+            refreshStatuses();
+        }
+    });
+
+    // Inicialização
+    filterPrinter('all');
+});
+</script>
+{% endblock %}

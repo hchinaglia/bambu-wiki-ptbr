@@ -643,3 +643,97 @@ def calculate_slicing_profile(
         },
         "alerts": expert_alerts,
     }
+
+
+def generate_bambu_studio_json_config(profile: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Gera arquivo JSON no formato nativo de predefinição (preset) do Bambu Studio.
+    Pode ser importado diretamente no software através de:
+    Menu Arquivo > Importar > Importar Configurações...
+    """
+    inputs = profile.get("inputs", {})
+    quality = profile.get("quality", {})
+    strength = profile.get("strength", {})
+    speed = profile.get("speed", {})
+    temp = profile.get("temperature", {})
+    cooling = profile.get("cooling", {})
+    adhesion = profile.get("adhesion", {})
+    support = profile.get("support", {})
+
+    printer_name = inputs.get("printer", {}).get("name", "Bambu Lab")
+    filament_name = inputs.get("filament", {}).get("name", "Filamento")
+    objective_name = inputs.get("objective", {}).get("name", "Equilibrado")
+    nozzle = inputs.get("nozzle_size", 0.4)
+
+    preset_name = f"BambuWiki_{filament_name.split('/')[0].strip().replace(' ', '_')}_{objective_name.replace(' ', '_')}"
+
+    # Mapeamento do padrão de infill para código interno do Bambu Studio
+    infill_map = {
+        "gyroid": "gyroid",
+        "grid": "grid",
+        "cross_hatch": "crosshatch",
+        "rectilinear": "rectilinear",
+        "honeycomb": "honeycomb",
+        "adaptive_cubic": "adaptivecubic"
+    }
+    bambu_infill = infill_map.get(strength.get("infill_pattern", "gyroid"), "gyroid")
+
+    # Mapeamento de suporte
+    bambu_support_type = "tree_auto" if "Árvore" in str(support.get("type", "")) else "normal_auto"
+    enable_support_val = "1" if inputs.get("enable_support") else "0"
+
+    density = str(strength.get("infill_density", 15))
+    if not density.endswith("%"):
+        density = f"{density}%"
+
+    return {
+        "type": "process",
+        "name": preset_name,
+        "from": "User",
+        "inherits": f"{quality.get('layer_height', 0.20):.2f}mm Standard @BBL {printer_name.split(' ')[-1]}",
+        "version": "1.9.0.0",
+        "instantiation": "true",
+        "layer_height": str(quality.get("layer_height", 0.20)),
+        "initial_layer_print_height": str(quality.get("initial_layer_height", 0.20)),
+        "wall_loops": str(strength.get("wall_loops", 2)),
+        "top_shell_layers": str(strength.get("top_shell_layers", 4)),
+        "bottom_shell_layers": str(strength.get("bottom_shell_layers", 3)),
+        "sparse_infill_density": density,
+        "sparse_infill_pattern": bambu_infill,
+        "outer_wall_speed": str(speed.get("outer_wall", 120)),
+        "inner_wall_speed": str(speed.get("inner_wall", 200)),
+        "sparse_infill_speed": str(speed.get("sparse_infill", 250)),
+        "internal_solid_infill_speed": str(speed.get("sparse_infill", 200)),
+        "top_surface_speed": str(speed.get("top_surface", 100)),
+        "initial_layer_speed": str(speed.get("initial_layer", 50)),
+        "gap_infill_speed": str(speed.get("inner_wall", 180)),
+        "travel_speed": "500",
+        "enable_support": enable_support_val,
+        "support_type": bambu_support_type,
+        "support_threshold_angle": "30",
+        "brim_type": "auto_brim" if adhesion.get("brim_type") != "no_brim" else "no_brim",
+        "brim_width": str(adhesion.get("brim_width", 5)),
+        "seam_position": quality.get("seam_position", "aligned"),
+        "wall_generator": quality.get("wall_generator", "classic"),
+        "default_filament_profile": [
+            f"Bambu {filament_name} @base"
+        ],
+        "filament_max_volumetric_speed": [
+            str(speed.get("max_volumetric_speed", 20))
+        ],
+        "nozzle_temperature": [
+            str(temp.get("nozzle_other", 220))
+        ],
+        "nozzle_temperature_initial_layer": [
+            str(temp.get("nozzle_initial", 220))
+        ],
+        "hot_plate_temp": [
+            str(temp.get("bed", 55))
+        ],
+        "hot_plate_temp_initial_layer": [
+            str(temp.get("bed", 55))
+        ],
+        "fan_cooling_layer_time": ["60"],
+        "fan_max_speed": [str(cooling.get("part_fan_max", 100))],
+        "fan_min_speed": [str(cooling.get("part_fan_min", 100))]
+    }

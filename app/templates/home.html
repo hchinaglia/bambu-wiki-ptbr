@@ -42,49 +42,142 @@
     </section>
 
     <!-- Grid de Ferramentas Maker Rápidas -->
-    <div class="row g-3 mb-5">
-        <!-- Calculadora Bambu Studio -->
-        <div class="col-md-6">
-            <div class="card border-0 bg-info-subtle border border-info-subtle rounded-4 p-3.5 shadow-xs h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-info text-white p-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
-                        <i class="bi bi-sliders fs-4"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <h3 class="h6 fw-bold mb-0 text-info-emphasis">Calculadora Bambu Studio</h3>
-                            <span class="badge bg-info text-white rounded-pill small" style="font-size: 0.65rem;">NOVO</span>
+    <section class="maker-tools-section mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h4 fw-bold mb-1"><i class="bi bi-tools text-success me-2"></i>Ferramentas Maker & Diagnóstico</h2>
+                <p class="text-muted small mb-0">Calculadoras de produção, inspeção .3mf, manutenção e inteligência artificial para o seu dia a dia.</p>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- 1. Calculadora de Orçamento & Lucro -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 bg-success-subtle border border-success-subtle rounded-4 p-3.5 shadow-xs h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="rounded-circle bg-success text-white p-2.5 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-cash-stack fs-4"></i>
+                            </div>
+                            <span class="badge bg-success text-white rounded-pill small" style="font-size: 0.65rem;">💰 ORÇAMENTO</span>
                         </div>
-                        <p class="text-muted small mb-2">Descubra as configurações ideais de fatiamento (paredes, infill, velocidade, bico e mesa) para sua peça.</p>
-                        <a href="/calculadora" class="btn btn-sm btn-info text-white fw-semibold rounded-pill px-3 shadow-xs">
+                        <h3 class="h6 fw-bold mb-1 text-success-emphasis">Orçamento & Lucro de Impressão</h3>
+                        <p class="text-muted small mb-3">Custos reais com filamento, luz, máquina e risco. Arraste arquivos <code>.3mf</code> e gere proposta para WhatsApp ou PDF.</p>
+                    </div>
+                    <div>
+                        <a href="/orcamento" class="btn btn-sm btn-success fw-semibold rounded-pill px-3 shadow-xs w-100">
+                            Gerar Orçamento <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Calculadora Bambu Studio & Perfis -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 bg-info-subtle border border-info-subtle rounded-4 p-3.5 shadow-xs h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="rounded-circle bg-info text-white p-2.5 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-sliders fs-4"></i>
+                            </div>
+                            <span class="badge bg-info text-white rounded-pill small" style="font-size: 0.65rem;">🎛️ EXPORTA .JSON</span>
+                        </div>
+                        <h3 class="h6 fw-bold mb-1 text-info-emphasis">Calculadora Bambu Studio</h3>
+                        <p class="text-muted small mb-3">Parâmetros ideais de paredes, infill e velocidade para cada uso, com download direto de perfis <code>.json</code> prontos para importar.</p>
+                    </div>
+                    <div>
+                        <a href="/calculadora" class="btn btn-sm btn-info text-white fw-semibold rounded-pill px-3 shadow-xs w-100">
                             Abrir Calculadora <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Assistente Especialista IA -->
-        <div class="col-md-6">
-            <div class="card border-0 bg-success-subtle border border-success-subtle rounded-4 p-3.5 shadow-xs h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle bg-success text-white p-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px;">
-                        <i class="bi bi-robot fs-4"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <h3 class="h6 fw-bold mb-0 text-success-emphasis">Assistente Especialista IA</h3>
-                            <span class="badge bg-success text-white rounded-pill small" style="font-size: 0.65rem;">Gemini</span>
+            <!-- 3. Detector de Cores & Preços -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 bg-warning-subtle border border-warning-subtle rounded-4 p-3.5 shadow-xs h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="rounded-circle bg-warning text-dark p-2.5 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-palette-fill fs-4"></i>
+                            </div>
+                            <span class="badge bg-warning text-dark rounded-pill small" style="font-size: 0.65rem;">🎨 LEITOR .3MF</span>
                         </div>
-                        <p class="text-muted small mb-2">Pesquisa em tempo real nos 2.486 manuais e analisa fotos de falhas para diagnóstico técnico.</p>
-                        <a href="/chat" class="btn btn-sm btn-success fw-semibold rounded-pill px-3 shadow-xs">
+                        <h3 class="h6 fw-bold mb-1 text-warning-emphasis">Detector de Cores & Preços</h3>
+                        <p class="text-muted small mb-3">Envie imagens ou arquivos <code>.3mf</code> para mapear carretéis AMS, descobrir o filamento ideal e encontrar melhores ofertas e cupons.</p>
+                    </div>
+                    <div>
+                        <a href="/cores" class="btn btn-sm btn-warning text-dark fw-semibold rounded-pill px-3 shadow-xs w-100">
+                            Buscar Cores & Preços <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Diagnóstico Visual de Falhas -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 bg-danger-subtle border border-danger-subtle rounded-4 p-3.5 shadow-xs h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="rounded-circle bg-danger text-white p-2.5 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-heart-pulse fs-4"></i>
+                            </div>
+                            <span class="badge bg-danger text-white rounded-pill small" style="font-size: 0.65rem;">🩺 14 FALHAS</span>
+                        </div>
+                        <h3 class="h6 fw-bold mb-1 text-danger-emphasis">Diagnóstico de Falhas FDM</h3>
+                        <p class="text-muted small mb-3">Identifique visualmente problemas como teia, empenamento, patas de elefante ou subextrusão e ajuste os sliders certos no Studio.</p>
+                    </div>
+                    <div>
+                        <a href="/falhas" class="btn btn-sm btn-danger text-white fw-semibold rounded-pill px-3 shadow-xs w-100">
+                            Diagnosticar Peça <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Painel de Manutenção Preventiva -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 bg-primary-subtle border border-primary-subtle rounded-4 p-3.5 shadow-xs h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="rounded-circle bg-primary text-white p-2.5 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-wrench-adjustable fs-4"></i>
+                            </div>
+                            <span class="badge bg-primary text-white rounded-pill small" style="font-size: 0.65rem;">📅 CHECKLIST</span>
+                        </div>
+                        <h3 class="h6 fw-bold mb-1 text-primary-emphasis">Manutenção Preventiva</h3>
+                        <p class="text-muted small mb-3">Checklist oficial com alertas periódicos para eixos de carbono, fusos Z, cortador de filamento e dessecante do AMS.</p>
+                    </div>
+                    <div>
+                        <a href="/manutencao" class="btn btn-sm btn-primary text-white fw-semibold rounded-pill px-3 shadow-xs w-100">
+                            Abrir Checklist <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Assistente Especialista IA -->
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card border-0 bg-body-tertiary border rounded-4 p-3.5 shadow-xs h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="rounded-circle bg-dark text-white p-2.5 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                <i class="bi bi-robot fs-4"></i>
+                            </div>
+                            <span class="badge bg-dark text-white rounded-pill small" style="font-size: 0.65rem;">⚡ GEMINI RAG</span>
+                        </div>
+                        <h3 class="h6 fw-bold mb-1 text-body">Assistente Especialista IA</h3>
+                        <p class="text-muted small mb-3">Pesquisa em tempo real nos 2.486 manuais e analisa fotos de falhas para diagnóstico técnico com visão computacional.</p>
+                    </div>
+                    <div>
+                        <a href="/chat" class="btn btn-sm btn-dark text-white fw-semibold rounded-pill px-3 shadow-xs w-100">
                             Conversar com a IA <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- Grade de Categorias / Produtos (Design Bambu Lab) -->
     <section class="categories-section mb-5">
@@ -179,32 +272,32 @@
                 </a>
             </div>
 
-            <!-- Solução de Problemas -->
+            <!-- Solução de Problemas & Falhas -->
             <div class="col-md-6 col-lg-3">
-                <a href="/hms" class="card category-card h-100 text-decoration-none border-0 shadow-sm rounded-4 p-3 transition-all">
+                <a href="/falhas" class="card category-card h-100 text-decoration-none border-0 shadow-sm rounded-4 p-3 transition-all">
                     <div class="d-flex align-items-center gap-3 mb-3">
                         <div class="category-icon-box rounded-3 bg-danger-subtle text-danger p-3">
-                            <i class="bi bi-upc-scan fs-3"></i>
+                            <i class="bi bi-heart-pulse fs-3"></i>
                         </div>
                         <div>
                             <h3 class="h6 fw-bold mb-0 text-body">Troubleshooting</h3>
-                            <span class="text-muted small">Erros & Códigos HMS</span>
+                            <span class="text-muted small">Falhas & Códigos HMS</span>
                         </div>
                     </div>
-                    <p class="text-muted small mb-0">Decodificador oficial para falhas de aquecedor, atolamento AMS e códigos HMS.</p>
+                    <p class="text-muted small mb-0">Diagnóstico visual de 14 defeitos de impressão e decodificador oficial de erros HMS.</p>
                 </a>
             </div>
 
-            <!-- Manutenção Periódica -->
+            <!-- Manutenção Preventiva -->
             <div class="col-md-6 col-lg-3">
-                <a href="/wiki/x1" class="card category-card h-100 text-decoration-none border-0 shadow-sm rounded-4 p-3 transition-all">
+                <a href="/manutencao" class="card category-card h-100 text-decoration-none border-0 shadow-sm rounded-4 p-3 transition-all">
                     <div class="d-flex align-items-center gap-3 mb-3">
                         <div class="category-icon-box rounded-3 bg-success-subtle text-success p-3">
                             <i class="bi bi-tools fs-3"></i>
                         </div>
                         <div>
                             <h3 class="h6 fw-bold mb-0 text-body">Manutenção</h3>
-                            <span class="text-muted small">Guias Preventivos</span>
+                            <span class="text-muted small">Checklist & Guias</span>
                         </div>
                     </div>
                     <p class="text-muted small mb-0">Limpeza de eixos de carbono, lubrificação de fusos Z e substituição de consumíveis.</p>
