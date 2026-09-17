@@ -24,7 +24,12 @@
                     </div>
                     <div>
                         <h1 class="h6 fw-bold mb-0">Assistente IA da Wiki Bambu Lab</h1>
-                        <span class="text-muted small">Pesquisa em tempo real nos 2.486 artigos da base</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">Pesquisa em tempo real nos 2.486 artigos da base</span>
+                            <span class="badge bg-body-secondary text-body-secondary border rounded-pill" id="sessionTokensBadge" style="font-size: 0.68rem;" title="Tokens acumulados nesta sessão">
+                                <i class="bi bi-cpu text-primary me-1"></i><span id="sessionTokensCount">0</span> tokens
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -273,7 +278,7 @@ async function handleChatSubmit(e) {
                             fullResponseText += event.token;
                             updateBotContent(botMsgId, fullResponseText);
                         } else if (event.type === "done") {
-                            finalizeBotMessage(botMsgId, fullResponseText, currentSources);
+                            finalizeBotMessage(botMsgId, fullResponseText, currentSources, event.usage);
                         } else if (event.type === "error") {
                             const badge = botEl.querySelector(".model-badge");
                             if (badge) {
@@ -344,9 +349,12 @@ function createStreamingBotMessage(msgId) {
         <div class="message-content bg-body border rounded-4 p-3 shadow-xs" style="max-width: 85%;">
             <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
                 <span class="fw-semibold small text-success">Bambu Lab IA</span>
-                <span class="model-badge badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size: 0.65rem;">
-                    Pesquisando na Wiki...
-                </span>
+                <div class="d-flex align-items-center gap-1.5">
+                    <span class="token-badge badge bg-body-secondary text-body-secondary border rounded-pill d-none" style="font-size: 0.65rem;"></span>
+                    <span class="model-badge badge bg-success-subtle text-success border border-success-subtle rounded-pill small" style="font-size: 0.65rem;">
+                        Pesquisando na Wiki...
+                    </span>
+                </div>
             </div>
             <div class="markdown-body small text-body" style="line-height: 1.65;">
                 <span class="placeholder-glow"><span class="placeholder col-6"></span></span>
@@ -376,27 +384,48 @@ function updateBotContent(msgId, markdownText) {
     }
 }
 
-function finalizeBotMessage(msgId, markdownText, sources) {
+let totalSessionTokens = 0;
+
+function finalizeBotMessage(msgId, markdownText, sources, usage) {
     updateBotContent(msgId, markdownText);
     const msgEl = document.getElementById(msgId);
-    if (!msgEl || !sources || sources.length === 0) return;
+    if (!msgEl) return;
 
-    const sourcesEl = msgEl.querySelector(".sources-container");
-    if (sourcesEl) {
-        sourcesEl.innerHTML = `
-            <div class="mt-3 pt-2 border-top">
-                <span class="fw-bold small text-muted text-uppercase d-block mb-1.5" style="font-size: 0.72rem;">
-                    <i class="bi bi-bookmarks me-1 text-success"></i> Artigos Consultados na Wiki:
-                </span>
-                <div class="d-flex flex-wrap gap-1.5">
-                    ${sources.map(s => `
-                        <a href="${s.path}" target="_blank" class="badge bg-light text-dark border text-decoration-none py-1.5 px-2">
-                            <i class="bi bi-file-earmark-text me-1 text-success"></i> ${escapeHtml(s.title)}
-                        </a>
-                    `).join("")}
+    if (usage && (usage.totalTokenCount || usage.promptTokenCount)) {
+        const total = usage.totalTokenCount || (usage.promptTokenCount + (usage.candidatesTokenCount || 0));
+        const promptTok = usage.promptTokenCount || 0;
+        const outTok = usage.candidatesTokenCount || (total - promptTok);
+
+        const tokenBadge = msgEl.querySelector(".token-badge");
+        if (tokenBadge) {
+            tokenBadge.classList.remove("d-none");
+            tokenBadge.title = `${promptTok} tokens de entrada (pergunta + contexto RAG) / ${outTok} tokens de saída`;
+            tokenBadge.innerHTML = `<i class="bi bi-cpu text-primary me-0.5"></i><strong>${total}</strong> tokens <span class="d-none d-md-inline opacity-75">(${promptTok} in · ${outTok} out)</span>`;
+        }
+
+        totalSessionTokens += total;
+        const sessionCountEl = document.getElementById("sessionTokensCount");
+        if (sessionCountEl) sessionCountEl.textContent = totalSessionTokens.toLocaleString("pt-BR");
+    }
+
+    if (sources && sources.length > 0) {
+        const sourcesEl = msgEl.querySelector(".sources-container");
+        if (sourcesEl) {
+            sourcesEl.innerHTML = `
+                <div class="mt-3 pt-2 border-top">
+                    <span class="fw-bold small text-muted text-uppercase d-block mb-1.5" style="font-size: 0.72rem;">
+                        <i class="bi bi-bookmarks me-1 text-success"></i> Artigos Consultados na Wiki:
+                    </span>
+                    <div class="d-flex flex-wrap gap-1.5">
+                        ${sources.map(s => `
+                            <a href="${s.path}" target="_blank" class="badge bg-light text-dark border text-decoration-none py-1.5 px-2">
+                                <i class="bi bi-file-earmark-text me-1 text-success"></i> ${escapeHtml(s.title)}
+                            </a>
+                        `).join("")}
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }

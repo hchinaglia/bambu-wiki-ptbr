@@ -409,9 +409,12 @@ async function handleDrawerChatSubmit(e) {
         <div class="message-content bg-body border rounded-3 p-2.5 shadow-xs" style="max-width: 88%;">
             <div class="d-flex justify-content-between align-items-center mb-1.5 pb-1 border-bottom">
                 <span class="fw-semibold text-success" style="font-size: 0.78rem;">Bambu Lab IA</span>
-                <span class="drawer-model-badge badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.6rem;">
-                    Pesquisando...
-                </span>
+                <div class="d-flex align-items-center gap-1">
+                    <span class="drawer-token-badge badge bg-light text-muted border rounded-pill d-none" style="font-size: 0.58rem;"></span>
+                    <span class="drawer-model-badge badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 0.6rem;">
+                        Pesquisando...
+                    </span>
+                </div>
             </div>
             <div class="drawer-markdown-body small text-body" style="line-height: 1.55;">
                 <span class="placeholder-glow"><span class="placeholder col-6"></span></span>
@@ -474,6 +477,18 @@ async function handleDrawerChatSubmit(e) {
                         } else if (evt.type === "done") {
                             const body = botMsgDiv.querySelector(".drawer-markdown-body");
                             if (body && window.marked) body.innerHTML = marked.parse(fullText);
+
+                            if (evt.usage && (evt.usage.totalTokenCount || evt.usage.promptTokenCount)) {
+                                const total = evt.usage.totalTokenCount || (evt.usage.promptTokenCount + (evt.usage.candidatesTokenCount || 0));
+                                const pTok = evt.usage.promptTokenCount || 0;
+                                const cTok = evt.usage.candidatesTokenCount || (total - pTok);
+                                const tBadge = botMsgDiv.querySelector(".drawer-token-badge");
+                                if (tBadge) {
+                                    tBadge.classList.remove("d-none");
+                                    tBadge.title = `${pTok} tokens de entrada / ${cTok} tokens de saída`;
+                                    tBadge.innerHTML = `<i class="bi bi-cpu text-primary me-0.5"></i><strong>${total}</strong> tok`;
+                                }
+                            }
 
                             if (sources && sources.length > 0) {
                                 const srcEl = botMsgDiv.querySelector(".drawer-sources-container");

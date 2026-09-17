@@ -371,11 +371,21 @@ def ask_agent(
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 data = json.loads(response.read().decode("utf-8"))
                 text = data["candidates"][0]["content"]["parts"][0]["text"]
+                usage = data.get("usageMetadata")
+                if not usage:
+                    p_tok = int(len(json.dumps(contents)) / 4)
+                    c_tok = int(len(text) / 4)
+                    usage = {
+                        "promptTokenCount": p_tok,
+                        "candidatesTokenCount": c_tok,
+                        "totalTokenCount": p_tok + c_tok
+                    }
                 return {
                     "answer": text,
                     "model_used": model_name,
                     "is_auto": is_auto,
                     "sources": sources,
+                    "usage": usage,
                     "status": "success"
                 }
         except urllib.error.HTTPError as e:
@@ -455,20 +465,33 @@ def stream_agent_response(
 
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 first_chunk = True
+                accumulated_text = ""
+                usage_metadata = None
                 for line in response:
                     line_str = line.decode("utf-8")
                     if line_str.startswith("data: "):
                         data_chunk = json.loads(line_str[6:].strip())
+                        if "usageMetadata" in data_chunk:
+                            usage_metadata = data_chunk["usageMetadata"]
                         parts = data_chunk.get("candidates", [{}])[0].get("content", {}).get("parts", [])
                         if parts and "text" in parts[0]:
                             chunk_text = parts[0]["text"]
+                            accumulated_text += chunk_text
                             if first_chunk:
                                 yield f"data: {json.dumps({'type': 'init', 'model': model_name, 'sources': sources})}\n\n"
                                 first_chunk = False
                             yield f"data: {json.dumps({'type': 'token', 'token': chunk_text})}\n\n"
 
                 if not first_chunk:
-                    yield f"data: {json.dumps({'type': 'done'})}\n\n"
+                    if not usage_metadata:
+                        p_tok = int(len(json.dumps(contents)) / 4)
+                        c_tok = int(len(accumulated_text) / 4)
+                        usage_metadata = {
+                            "promptTokenCount": p_tok,
+                            "candidatesTokenCount": c_tok,
+                            "totalTokenCount": p_tok + c_tok
+                        }
+                    yield f"data: {json.dumps({'type': 'done', 'usage': usage_metadata})}\n\n"
                     return
         except urllib.error.HTTPError as e:
             try:
@@ -495,7 +518,7 @@ def stream_agent_response(
             for i in range(0, len(words), 3):
                 chunk = " ".join(words[i:i+3]) + (" " if i+3 < len(words) else "")
                 yield f"data: {json.dumps({'type': 'token', 'token': chunk})}\n\n"
-            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'usage': res.get('usage')})}\n\n"
             return
         elif res.get("answer"):
             last_error = res.get("answer")
