@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initGlobalSearch();
     initScrollSpy();
     initCopyUrl();
+    initCodeCopyButtons();
     initBookmarks();
     initDrawerChat();
 });
@@ -187,6 +188,45 @@ function initCopyUrl() {
     });
 }
 
+/* -------------------------------------------------------------------------- */
+/* Botão "Copiar" em Blocos de Código e G-Code                                */
+/* -------------------------------------------------------------------------- */
+function initCodeCopyButtons() {
+    const preBlocks = document.querySelectorAll(".article-body pre, .markdown-body pre");
+    preBlocks.forEach((pre) => {
+        if (pre.querySelector(".code-copy-btn")) return;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "code-copy-btn";
+        btn.innerHTML = '<i class="bi bi-clipboard"></i> <span>Copiar</span>';
+        btn.title = "Copiar código para a área de transferência";
+
+        btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const codeEl = pre.querySelector("code") || pre;
+            const clone = codeEl.cloneNode(true);
+            const internalBtn = clone.querySelector(".code-copy-btn");
+            if (internalBtn) internalBtn.remove();
+            const textToCopy = clone.innerText.trim();
+
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                btn.classList.add("copied");
+                btn.innerHTML = '<i class="bi bi-check2"></i> <span>Copiado!</span>';
+                setTimeout(() => {
+                    btn.classList.remove("copied");
+                    btn.innerHTML = '<i class="bi bi-clipboard"></i> <span>Copiar</span>';
+                }, 2000);
+            } catch (err) {
+                console.error("Falha ao copiar código:", err);
+            }
+        });
+
+        pre.appendChild(btn);
+    });
+}
+
 function escapeHtml(text) {
     if (!text) return "";
     const div = document.createElement("div");
@@ -218,27 +258,29 @@ function initBookmarks() {
 function renderBookmarks() {
     const list = getBookmarks();
     const badge = document.getElementById("bookmarksBadge");
+    const badgeMobile = document.getElementById("bookmarksBadgeMobile");
     const container = document.getElementById("bookmarksList");
+    const containerMobile = document.getElementById("bookmarksListMobile");
 
     if (badge) badge.innerText = list.length;
-    if (!container) return;
+    if (badgeMobile) badgeMobile.innerText = list.length;
 
-    if (list.length === 0) {
-        container.innerHTML = '<div class="text-center py-3 text-muted small">Nenhum manual salvo ainda.</div>';
-        return;
-    }
+    const htmlContent = list.length === 0
+        ? '<div class="text-center py-3 text-muted small">Nenhum manual salvo ainda.</div>'
+        : list.map(item => `
+            <div class="d-flex align-items-center justify-content-between p-1.5 border-bottom">
+                <a href="/wiki/${item.path}" class="text-decoration-none text-body small text-truncate pe-2">
+                    <span class="badge bg-light text-muted border text-uppercase" style="font-size: 0.65rem;">${item.section}</span>
+                    <span class="fw-semibold ms-1">${escapeHtml(item.title)}</span>
+                </a>
+                <button class="btn btn-sm btn-link text-danger p-0 ms-auto" onclick="removeBookmark('${item.path}')" title="Remover dos favoritos">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        `).join("");
 
-    container.innerHTML = list.map(item => `
-        <div class="d-flex align-items-center justify-content-between p-1.5 border-bottom">
-            <a href="/wiki/${item.path}" class="text-decoration-none text-body small text-truncate pe-2">
-                <span class="badge bg-light text-muted border text-uppercase" style="font-size: 0.65rem;">${item.section}</span>
-                <span class="fw-semibold ms-1">${escapeHtml(item.title)}</span>
-            </a>
-            <button class="btn btn-sm btn-link text-danger p-0 ms-auto" onclick="removeBookmark('${item.path}')" title="Remover dos favoritos">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-    `).join("");
+    if (container) container.innerHTML = htmlContent;
+    if (containerMobile) containerMobile.innerHTML = htmlContent;
 }
 
 function removeBookmark(path) {
@@ -261,34 +303,36 @@ function toggleCurrentBookmark(path, title, section) {
 }
 
 function updateCurrentArticleBookmarkButton() {
-    const btn = document.getElementById("bookmarkBtn");
-    const icon = document.getElementById("bookmarkIcon");
-    const text = document.getElementById("bookmarkText");
-    if (!btn || !icon || !text) return;
+    const buttons = document.querySelectorAll(".btn-bookmark-action, #bookmarkBtn");
+    if (!buttons || buttons.length === 0) return;
 
-    if (!btn.dataset.listenerAttached) {
-        btn.dataset.listenerAttached = "true";
-        btn.addEventListener("click", function() {
-            toggleCurrentBookmark(btn.dataset.path, btn.dataset.title, btn.dataset.section);
-        });
-    }
-
-    // Detecta o path da página atual
-    const currentPath = btn.dataset.path || window.location.pathname.replace(/^\/wiki\//, "").replace(/\/$/, "");
     const list = getBookmarks();
-    const isBookmarked = list.some(i => i.path === currentPath);
 
-    if (isBookmarked) {
-        icon.className = "bi bi-star-fill text-warning";
-        text.innerText = "Salvo";
-        btn.classList.remove("btn-outline-warning");
-        btn.classList.add("btn-warning", "text-dark");
-    } else {
-        icon.className = "bi bi-star";
-        text.innerText = "Favoritar";
-        btn.classList.remove("btn-warning", "text-dark");
-        btn.classList.add("btn-outline-warning");
-    }
+    buttons.forEach((btn) => {
+        if (!btn.dataset.listenerAttached) {
+            btn.dataset.listenerAttached = "true";
+            btn.addEventListener("click", function() {
+                toggleCurrentBookmark(btn.dataset.path, btn.dataset.title, btn.dataset.section);
+            });
+        }
+
+        const currentPath = btn.dataset.path || window.location.pathname.replace(/^\/wiki\//, "").replace(/\/$/, "");
+        const isBookmarked = list.some(i => i.path === currentPath);
+        const icon = btn.querySelector(".bookmark-icon, #bookmarkIcon") || btn.querySelector("i");
+        const text = btn.querySelector(".bookmark-text, #bookmarkText") || btn.querySelector("span");
+
+        if (isBookmarked) {
+            if (icon) icon.className = "bi bi-star-fill text-warning";
+            if (text) text.innerText = "Salvo";
+            btn.classList.remove("btn-outline-warning");
+            btn.classList.add("btn-warning", "text-dark");
+        } else {
+            if (icon) icon.className = "bi bi-star";
+            if (text) text.innerText = "Favoritar";
+            btn.classList.remove("btn-warning", "text-dark");
+            btn.classList.add("btn-outline-warning");
+        }
+    });
 }
 
 /* -------------------------------------------------------------------------- */

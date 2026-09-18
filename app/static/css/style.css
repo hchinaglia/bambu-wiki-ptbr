@@ -341,6 +341,43 @@ body {
     border-radius: 8px;
     overflow-x: auto;
     margin: 1.5rem 0;
+    position: relative;
+}
+
+.code-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+    z-index: 2;
+    backdrop-filter: blur(4px);
+}
+
+.article-body pre:hover .code-copy-btn {
+    opacity: 1;
+}
+
+.code-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+.code-copy-btn.copied {
+    background: rgba(0, 174, 66, 0.25);
+    border-color: #00ae42;
+    color: #4ade80;
 }
 
 .article-body pre code {
@@ -416,4 +453,72 @@ mark {
 .mb-1-5, .mb-1\.5 { margin-bottom: 0.375rem !important; }
 .mt-1-5, .mt-1\.5 { margin-top: 0.375rem !important; }
 .mt-2-5, .mt-2\.5 { margin-top: 0.625rem !important; }
+
+/* -------------------------------------------------------------------------- */
+/* Print Media Styles (Impressão limpa para a bancada técnica)                */
+/* -------------------------------------------------------------------------- */
+@media print {
+    /* Oculta menus, sidebars, gaveta do chat e elementos desnecessários no papel */
+    .custom-navbar,
+    .custom-footer,
+    .sidebar-sticky,
+    .toc-sticky,
+    aside,
+    .offcanvas,
+    #aiChatDrawer,
+    .btn,
+    .code-copy-btn,
+    .article-footer,
+    .kbd-shortcut,
+    .btn-ask-article-doubt,
+    .search-container,
+    .theme-toggle-btn {
+        display: none !important;
+    }
+
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+        padding: 0 !important;
+    }
+
+    .container-fluid,
+    .container,
+    .row,
+    main,
+    .article-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    .article-body pre {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        page-break-inside: avoid;
+    }
+
+    .article-body img {
+        max-width: 85% !important;
+        page-break-inside: avoid;
+    }
+
+    h1, h2, h3, h4 {
+        page-break-after: avoid;
+        color: #000000 !important;
+    }
+
+    a {
+        text-decoration: none !important;
+        color: #000000 !important;
+    }
+}
+
 

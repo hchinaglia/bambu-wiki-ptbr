@@ -5,7 +5,7 @@ Aplicação Web FastAPI para a Wiki Bambu Lab em Português (PT-BR).
 import os
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Query, Request, Response
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -190,6 +190,18 @@ Disallow: /api/
 Sitemap: https://bambu-wiki-ptbr.vercel.app/sitemap.xml
 """
     return PlainTextResponse(content.strip(), media_type="text/plain")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    """Retorna o favicon para requisições diretas do navegador."""
+    png_path = os.path.join(STATIC_DIR, "images", "favicon.png")
+    if os.path.exists(png_path):
+        return FileResponse(png_path, media_type="image/png")
+    svg_path = os.path.join(STATIC_DIR, "images", "favicon.svg")
+    if os.path.exists(svg_path):
+        return FileResponse(svg_path, media_type="image/svg+xml")
+    return Response(status_code=204)
 
 
 @app.get("/sitemap.xml")
